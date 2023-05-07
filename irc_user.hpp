@@ -3,6 +3,9 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
+#include "command.hpp"
+#include "str-utils.hpp"
 
 class User
 {
@@ -12,19 +15,22 @@ public:
     std::string login;
 
 public:
-    virtual void handleMessage(const std::string &message) = 0;
+    virtual void handleSocket(const Command &cmd) = 0;
 
 public: // static
-    static std::string upperFirstWord(const char *message)
+    static Command parseIntoCmd(std::string &message)
     {
-        std::string str(message);
-        str.erase(str.find_last_not_of("\n") + 1);
-        str.erase(str.find_last_not_of("\r") + 1);
-        for (int i = 0; i < str.length() && str[i] != ' '; i++)
-        {
-            str[i] = toupper(str[i]);
-        }
-        return str;
+        Command cmd;
+
+        message = trim(message);
+        message = upperFirstWord(message.c_str());
+        std::istringstream ss(message);
+        size_t npos = message.find_first_of(" \t\n\r\v\f");
+        if (npos == std::string::npos)
+            return (Command){message, ""};
+        cmd.cmd = message.substr(0, npos);
+        cmd.args = trim(message.substr(npos));
+        return cmd;
     }
 };
 
@@ -34,18 +40,22 @@ public:
     std::string password;
     std::string realname;
 
-    void handleMessage(const std::string &message)
+    void handleSocket(const Command &cmd)
     {
-        std::cout << "initial user: " << message << std::endl;
+        std::cout << "cmd: " << cmd.cmd << std::endl;
+        std::cout << "args: " << cmd.args << std::endl;
+        std::cout << "-------" << std::endl;
     }
 };
 
 class RegistredUser : public User
 {
 public:
-    void handleMessage(const std::string &message)
+    void handleSocket(const Command &cmd)
     {
-        std::cout << "irc user: " << message << std::endl;
+        std::cout << "cmd: " << cmd.cmd << std::endl;
+        std::cout << "args: " << cmd.args << std::endl;
+        std::cout << "-------" << std::endl;
     }
 };
 

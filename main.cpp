@@ -1,3 +1,5 @@
+#include <iostream>
+#include <sstream>
 #include <stdlib.h>
 #include <iostream>
 #include <string>
@@ -10,6 +12,7 @@
 #include <fcntl.h> // non blocking sockets
 #include <poll.h>
 #include "context.hpp"
+#include "str-utils.hpp"
 
 #define BACKLOG 10 // how many pending connections queue will hold
 
@@ -195,10 +198,16 @@ int main(int argc, char **argv)
                 else
                 {
                     buffer[nb_bytes] = 0;
-                    std::string message = User::upperFirstWord(buffer);
-                    context
-                        .getSocketHandler(client_fd)
-                        ->handleMessage(message);
+
+                    std::istringstream ss(buffer);
+                    std::string message;
+                    while (std::getline(ss, message, '\n'))
+                    {
+                        Command cmd = User::parseIntoCmd(message);
+                        context
+                            .getSocketHandler(client_fd)
+                            ->handleSocket(cmd);
+                    }
 
                     // PASS 123
                     // NICK mzarhou_nickname
