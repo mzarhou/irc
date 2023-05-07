@@ -3,9 +3,10 @@ NAME = ircserv
 ODIR = build
 SRCS = main.cpp
 OBJS = ${patsubst %.cpp, ${ODIR}/%.o, ${SRCS}}
-HEADERS =
+HEADERS = context.hpp irc_user.hpp
 INC =
-FLAGS = -Wall -Wextra -Werror -std=c++98
+# FLAGS = -Wall -Wextra -Werror -std=c++98
+FLAGS =
 CC = c++ ${FLAGS}
 
 all: ${NAME}
