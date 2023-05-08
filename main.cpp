@@ -1,3 +1,5 @@
+#include <iostream>
+#include <sstream>
 #include <stdlib.h>
 #include <iostream>
 #include <string>
@@ -9,6 +11,8 @@
 #include <unistd.h>
 #include <fcntl.h> // non blocking sockets
 #include <poll.h>
+#include "context.hpp"
+#include "str-utils.hpp"
 
 #define BACKLOG 10 // how many pending connections queue will hold
 
@@ -111,6 +115,8 @@ int main(int argc, char **argv)
     std::string port = argv[1];
     std::string password = argv[2];
 
+    Context context(password);
+
     struct sockaddr_storage client_addr;
     socklen_t addr_size;
     char clientIP[INET6_ADDRSTRLEN];
@@ -166,6 +172,7 @@ int main(int argc, char **argv)
                         clientIP,
                         INET6_ADDRSTRLEN);
                     std::cout << "new connection from " << clientIP << " on socket " << newClientFd << std::endl;
+                    context.addNewUser(newClientFd);
                 }
             }
             else
@@ -184,21 +191,27 @@ int main(int argc, char **argv)
                     {
                         perror("recv");
                     }
+                    context.onUserDeconnected(client_fd);
                     close(client_fd);
                     del_from_pfds(pfds, i, &fd_count);
                 }
                 else
                 {
                     buffer[nb_bytes] = 0;
-                    // read data
-                    for (int i = 0; i < fd_count; i++)
+
+                    std::istringstream ss(buffer);
+                    std::string message;
+                    while (std::getline(ss, message, '\n'))
                     {
-                        int dest_fd = pfds[i].fd;
-                        if (dest_fd != client_fd && dest_fd != listener_sock)
-                        {
-                            send(dest_fd, buffer, nb_bytes, 0);
-                        }
+                        Command cmd = User::parseIntoCmd(message);
+                        context
+                            .getSocketHandler(client_fd)
+                            ->handleSocket(cmd);
                     }
+
+                    // PASS 123
+                    // NICK mzarhou_nickname
+                    // USER mzarhou_login 0 * mzarhou_realname
                 }
             }
         }
