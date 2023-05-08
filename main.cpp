@@ -115,7 +115,7 @@ int main(int argc, char **argv)
     std::string port = argv[1];
     std::string password = argv[2];
 
-    Context context;
+    Context context(password);
 
     struct sockaddr_storage client_addr;
     socklen_t addr_size;
@@ -204,9 +204,8 @@ int main(int argc, char **argv)
                     while (std::getline(ss, message, '\n'))
                     {
                         Command cmd = User::parseIntoCmd(message);
-                        context
-                            .getSocketHandler(client_fd)
-                            ->handleSocket(cmd);
+                        User *user = context.getSocketHandler(client_fd);
+                        user->handleSocket(cmd);
                     }
 
                     // PASS 123
