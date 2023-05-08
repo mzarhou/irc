@@ -14,8 +14,10 @@ struct Command;
 
 class User
 {
-public:
+protected:
     Context *context;
+
+public:
     int fd;
     std::string nickname;
     std::string login;
