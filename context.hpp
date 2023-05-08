@@ -17,7 +17,7 @@ private:
 public:
     void addNewUser(int sockfd)
     {
-        ConnectedUser new_user;
+        ConnectedUser new_user(sockfd);
         connected_users[sockfd] = new_user;
     }
 
