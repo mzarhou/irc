@@ -115,7 +115,7 @@ int main(int argc, char **argv)
     std::string port = argv[1];
     std::string password = argv[2];
 
-    Context context;
+    Context context(password);
 
     struct sockaddr_storage client_addr;
     socklen_t addr_size;
