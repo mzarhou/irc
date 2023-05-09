@@ -204,9 +204,8 @@ int main(int argc, char **argv)
                     while (std::getline(ss, message, '\n'))
                     {
                         Command cmd = User::parseIntoCmd(message);
-                        context
-                            .getSocketHandler(client_fd)
-                            ->handleSocket(cmd);
+                        User *user = context.getSocketHandler(client_fd);
+                        user->handleSocket(cmd);
                     }
 
                     // PASS 123

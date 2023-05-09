@@ -7,14 +7,14 @@ User::User(const User &other)
     *this = other;
 }
 
-User &User::operator=(const User &other)
-{
-    this->context = other.context;
-    this->fd = other.fd;
-    this->nickname = other.nickname;
-    this->login = other.login;
-    return *this;
-}
+// User &User::operator=(const User &other)
+// {
+//     this->context = other.context;
+//     this->fd = other.fd;
+//     this->nickname = other.nickname;
+//     this->login = other.login;
+//     return *this;
+// }
 
 User::~User() {}
 
@@ -28,7 +28,7 @@ Command User::parseIntoCmd(std::string &message)
     size_t npos = message.find_first_of(" \t\n\r\v\f");
     if (npos == std::string::npos)
         return (Command){message, ""};
-    cmd.cmd = message.substr(0, npos);
+    cmd.name = message.substr(0, npos);
     cmd.args = trim(message.substr(npos));
     return cmd;
 }
@@ -43,30 +43,33 @@ ConnectedUser::ConnectedUser(const ConnectedUser &other) : User(other)
     *this = other;
 }
 
-ConnectedUser &ConnectedUser::operator=(const ConnectedUser &other)
-{
-    this->password = other.password;
-    this->realname = other.realname;
-    return *this;
-}
+// ConnectedUser &ConnectedUser::operator=(const ConnectedUser &other)
+// {
+//     this->password = other.password;
+//     this->realname = other.realname;
+//     return *this;
+// }
 
 ConnectedUser::~ConnectedUser() {}
 
 void ConnectedUser::handleSocket(const Command &cmd)
 {
-    try
+    CmdHandler *command = context->getCommand(cmd.name);
+    if (!command)
     {
-        cmd.runCommand(context, *this);
+        // throw std::invalid_argument("invalid command");
     }
-    catch (const std::exception &e)
+    else
     {
-        std::cerr << e.what() << '\n';
+        command->validate(*this, cmd.args);
+        command->run(*this, cmd.args);
+        onChange();
     }
 }
 
 void ConnectedUser::onChange()
 {
-    if (nickname.length() == 0 || login.length() == 0 || password.length() == 0)
+    if (nickname.empty() || login.empty() || password.empty())
     {
         return;
     }
@@ -82,22 +85,16 @@ RegistredUser::RegistredUser(const RegistredUser &other) : User(other)
 {
     *this = other;
 }
-RegistredUser &RegistredUser::operator=(const RegistredUser &other)
-{
-    return *this;
-}
+// RegistredUser &RegistredUser::operator=(const RegistredUser &other)
+// {
+//     (void)other;
+//     return *this;
+// }
 RegistredUser::~RegistredUser()
 {
 }
 
 void RegistredUser::handleSocket(const Command &cmd)
 {
-    try
-    {
-        cmd.runCommand(context, *this);
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << e.what() << '\n';
-    }
+    (void)cmd;
 }

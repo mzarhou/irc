@@ -7,7 +7,7 @@
 #include "str-utils.hpp"
 
 class Context;
-class Command;
+struct Command;
 
 #include "command.hpp"
 #include "context.hpp"
@@ -25,8 +25,8 @@ public:
 public: // constructors
     User(Context *context, int sockfd);
     User(const User &other);
-    User &operator=(const User &other);
-    ~User();
+    // User &operator=(const User &other);
+    virtual ~User();
 
 public:
     virtual void handleSocket(const Command &cmd) = 0;
@@ -45,7 +45,7 @@ public: // constructors
     ConnectedUser();
     ConnectedUser(Context *context, int sockfd);
     ConnectedUser(const ConnectedUser &other);
-    ConnectedUser &operator=(const ConnectedUser &other);
+    // ConnectedUser &operator=(const ConnectedUser &other);
     ~ConnectedUser();
 
 public:
@@ -61,7 +61,7 @@ public:
     RegistredUser();
     RegistredUser(Context *context, int sockfd);
     RegistredUser(const RegistredUser &other);
-    RegistredUser &operator=(const RegistredUser &other);
+    // RegistredUser &operator=(const RegistredUser &other);
     ~RegistredUser();
 
     void handleSocket(const Command &cmd);

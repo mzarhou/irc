@@ -8,50 +8,46 @@ class Context;
 
 #include "context.hpp"
 
-class Command
+struct Command
 {
-public:
-    std::string cmd;
+    std::string name;
     std::string args;
-
-    void runCommand(Context *context, User &user) const;
 };
 
 class CmdHandler
 {
 protected:
-    std::string args;
-    User &user;
     Context *context;
 
 public:
-    CmdHandler(Context *context, User &user, const std::string &args);
-    virtual void validate() = 0;
-    virtual void run() = 0;
+    CmdHandler(Context *context);
+    virtual ~CmdHandler();
+    virtual void validate(User &user, const std::string &args) = 0;
+    virtual void run(User &user, const std::string &args) = 0;
 };
 
 class PassCommand : public CmdHandler
 {
 public:
-    PassCommand(Context *context, User &user, const std::string &args);
-    void validate();
-    void run();
+    PassCommand(Context *context);
+    void validate(User &user, const std::string &args);
+    void run(User &user, const std::string &args);
 };
 
 class NickCommand : public CmdHandler
 {
 public:
-    NickCommand(Context *context, User &user, const std::string &args);
-    void validate();
-    void run();
+    NickCommand(Context *context);
+    void validate(User &user, const std::string &args);
+    void run(User &user, const std::string &args);
 };
 
 class UserCommand : public CmdHandler
 {
 public:
-    UserCommand(Context *context, User &user, const std::string &args);
-    void validate();
-    void run();
+    UserCommand(Context *context);
+    void validate(User &user, const std::string &args);
+    void run(User &user, const std::string &args);
 };
 
 #endif
