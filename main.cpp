@@ -175,7 +175,8 @@ int main(int argc, char **argv)
                     context.addNewUser(newClientFd);
                     // send a welcome message to the client
                     std::string welcomeMsg = "Welcome to the server!\n";
-                    if (send(newClientFd, welcomeMsg.c_str(), welcomeMsg.length(), 0) == -1) {
+                    if (send(newClientFd, welcomeMsg.c_str(), welcomeMsg.length(), 0) == -1)
+                    {
                         perror("send");
                     }
                 }
@@ -196,8 +197,7 @@ int main(int argc, char **argv)
                     {
                         perror("recv");
                     }
-                    context.onUserDeconnected(client_fd);
-                    close(client_fd);
+                    context.disconnectUser(client_fd);
                     del_from_pfds(pfds, i, &fd_count);
                 }
                 else
