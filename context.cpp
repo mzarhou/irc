@@ -140,3 +140,13 @@ void Context::sendClientMsg(User &user, const std::string &msg)
         perror("send");
     }
 }
+
+void Context::createNewChannel(const std::string &tag)
+{
+    CHANNELS_MAP::iterator it = channels.find(tag);
+    if (it != channels.end())
+        throw std::invalid_argument("channel already exists");
+    Channel c(this, tag);
+    channels[tag] = c;
+}
+

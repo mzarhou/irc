@@ -1,20 +1,14 @@
 #include "irc_user.hpp"
 
+/**
+ * User
+ */
 User::User(Context *context, int sockfd) : context(context), fd(sockfd), nickname(""), username(""){};
 
 User::User(const User &other)
 {
     *this = other;
 }
-
-// User &User::operator=(const User &other)
-// {
-//     this->context = other.context;
-//     this->fd = other.fd;
-//     this->nickname = other.nickname;
-//     this->username = other.username;
-//     return *this;
-// }
 
 User::~User() {}
 
@@ -42,14 +36,6 @@ ConnectedUser::ConnectedUser(const ConnectedUser &other) : User(other)
 {
     *this = other;
 }
-
-// ConnectedUser &ConnectedUser::operator=(const ConnectedUser &other)
-// {
-//     this->password = other.password;
-//     this->realname = other.realname;
-//     return *this;
-// }
-
 ConnectedUser::~ConnectedUser() {}
 
 void ConnectedUser::handleSocket(const Command &cmd)
@@ -109,11 +95,6 @@ RegistredUser::RegistredUser(const RegistredUser &other) : User(other)
 {
     *this = other;
 }
-// RegistredUser &RegistredUser::operator=(const RegistredUser &other)
-// {
-//     (void)other;
-//     return *this;
-// }
 RegistredUser::~RegistredUser()
 {
 }

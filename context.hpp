@@ -51,6 +51,8 @@ public:
     std::string getServerpassw(void);
 
     void sendClientMsg(User &user, const std::string &msg);
+
+    void createNewChannel(const std::string &tag);
 };
 
 #endif
