@@ -16,12 +16,14 @@ Command User::parseIntoCmd(std::string &message)
 {
     Command cmd;
 
+    cmd.originalName = getFirstWord(message.c_str());
+
     message = trim(message);
     message = upperFirstWord(message.c_str());
     std::istringstream ss(message);
     size_t npos = message.find_first_of(" \t\n\r\v\f");
     if (npos == std::string::npos)
-        return (Command){message, ""};
+        return (Command){cmd.originalName, message, ""};
     cmd.name = message.substr(0, npos);
     cmd.args = trim(message.substr(npos));
     return cmd;
@@ -104,6 +106,9 @@ void RegistredUser::handleSocket(const Command &cmd)
     CmdHandler *command = context->getCommand(cmd.name);
     if (!command)
     {
+        std::ostringstream oss;
+        oss << ":localhost 421 " << nickname << " " << cmd.originalName << " :Unknown command\n";
+        context->sendClientMsg(*this, oss.str());
         return;
     }
 

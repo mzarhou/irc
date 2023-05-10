@@ -13,6 +13,7 @@ class Context;
 
 struct Command
 {
+    std::string originalName;
     std::string name;
     std::string args;
 };
