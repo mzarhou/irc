@@ -101,5 +101,19 @@ RegistredUser::~RegistredUser()
 
 void RegistredUser::handleSocket(const Command &cmd)
 {
-    (void)cmd;
+    CmdHandler *command = context->getCommand(cmd.name);
+    if (!command)
+    {
+        return;
+    }
+
+    try
+    {
+        command->validate(*this, cmd.args);
+        command->run(*this, cmd.args);
+    }
+    catch (const std::exception &e)
+    {
+        context->sendClientMsg(*this, e.what());
+    }
 }
