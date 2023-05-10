@@ -33,12 +33,20 @@ public:
 
     void registerCommand(const std::string &name, CmdHandler *handler);
     CmdHandler *getCommand(const std::string &name);
+
     void addNewUser(int sockfd);
     REGISTRED_USERS_MAP::iterator findRegistredUserByFd(int fd);
-    void onUserDeconnected(int fd);
+    CONNECTED_USERS_MAP::iterator findConnectedUsersByNickName(const std::string &nickname);
+    bool isNickNameRegistred(const std::string &nickname);
+    bool isNickNameConnected(const std::string &nickname);
+    void disconnectUser(int fd);
+    void disconnectUser(const std::string &nickname);
     void registerUser(ConnectedUser &user);
 
     User *getSocketHandler(int sockfd);
+    std::string getServerpassw(void);
+
+    void sendClientMsg(User &user, const std::string &msg);
 };
 
 #endif

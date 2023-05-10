@@ -173,6 +173,12 @@ int main(int argc, char **argv)
                         INET6_ADDRSTRLEN);
                     std::cout << "new connection from " << clientIP << " on socket " << newClientFd << std::endl;
                     context.addNewUser(newClientFd);
+                    // send a welcome message to the client
+                    std::string welcomeMsg = "Welcome to the server!\n";
+                    if (send(newClientFd, welcomeMsg.c_str(), welcomeMsg.length(), 0) == -1)
+                    {
+                        perror("send");
+                    }
                 }
             }
             else
@@ -191,8 +197,7 @@ int main(int argc, char **argv)
                     {
                         perror("recv");
                     }
-                    context.onUserDeconnected(client_fd);
-                    close(client_fd);
+                    context.disconnectUser(client_fd);
                     del_from_pfds(pfds, i, &fd_count);
                 }
                 else
@@ -210,7 +215,7 @@ int main(int argc, char **argv)
 
                     // PASS 123
                     // NICK mzarhou_nickname
-                    // USER mzarhou_login 0 * mzarhou_realname
+                    // USER mzarhou_username 0 * mzarhou_realname
                 }
             }
         }

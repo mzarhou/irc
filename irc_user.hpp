@@ -20,7 +20,9 @@ protected:
 public:
     int fd;
     std::string nickname;
-    std::string login;
+    std::string realname;
+    std::string username;
+    std::string password;
 
 public: // constructors
     User(Context *context, int sockfd);
@@ -37,10 +39,6 @@ public: // static
 
 class ConnectedUser : public User
 {
-public:
-    std::string password;
-    std::string realname;
-
 public: // constructors
     ConnectedUser();
     ConnectedUser(Context *context, int sockfd);

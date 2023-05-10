@@ -2,6 +2,9 @@
 #define COMMAND_HPP
 
 #include <string>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
 #include "irc_user.hpp"
 
 class Context;

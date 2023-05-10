@@ -1,6 +1,6 @@
 #include "irc_user.hpp"
 
-User::User(Context *context, int sockfd) : context(context), fd(sockfd), nickname(""), login(""){};
+User::User(Context *context, int sockfd) : context(context), fd(sockfd), nickname(""), username(""){};
 
 User::User(const User &other)
 {
@@ -12,7 +12,7 @@ User::User(const User &other)
 //     this->context = other.context;
 //     this->fd = other.fd;
 //     this->nickname = other.nickname;
-//     this->login = other.login;
+//     this->username = other.username;
 //     return *this;
 // }
 
@@ -37,7 +37,7 @@ Command User::parseIntoCmd(std::string &message)
  * ConnectedUser
  */
 ConnectedUser::ConnectedUser() : User(NULL, -1) {}
-ConnectedUser::ConnectedUser(Context *context, int sockfd) : User(context, sockfd), password(""), realname("") {}
+ConnectedUser::ConnectedUser(Context *context, int sockfd) : User(context, sockfd) {}
 ConnectedUser::ConnectedUser(const ConnectedUser &other) : User(other)
 {
     *this = other;
@@ -61,18 +61,31 @@ void ConnectedUser::handleSocket(const Command &cmd)
     }
     else
     {
-        command->validate(*this, cmd.args);
-        command->run(*this, cmd.args);
-        onChange();
+        try
+        {
+            command->validate(*this, cmd.args);
+            command->run(*this, cmd.args);
+            onChange();
+        }
+        catch (const std::exception &e)
+        {
+            context->sendClientMsg(*this, e.what());
+        }
     }
 }
 
 void ConnectedUser::onChange()
 {
-    if (nickname.empty() || login.empty() || password.empty())
-    {
+    std::cout << "-> socket fd: " << fd << '\n';
+    std::cout << "-> nickname: " << nickname << '\n';
+    std::cout << "-> username: " << username << '\n';
+    std::cout << "-> password: " << password << '\n';
+    if (nickname.empty() || username.empty() || password.empty())
         return;
-    }
+
+    std::ostringstream oss;
+    oss << ":localhost " << nickname << " :Welcome to the 1337.server.chat Internet Relay Chat Network " << nickname << '\n';
+    context->sendClientMsg(*this, oss.str());
     context->registerUser(*this);
 }
 
