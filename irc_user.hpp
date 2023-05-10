@@ -15,12 +15,14 @@ struct Command;
 class User
 {
 protected:
-    Context *context;
 
 public:
+    Context *context;
     int fd;
     std::string nickname;
-    std::string login;
+    std::string realname;
+    std::string username;
+    std::string password;
 
 public: // constructors
     User(Context *context, int sockfd);
@@ -52,7 +54,7 @@ public:
     void handleSocket(const Command &cmd);
 
 private: // commands
-    void onChange();
+    void onChange(User &user);
 };
 
 class RegistredUser : public User
