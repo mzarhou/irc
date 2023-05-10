@@ -8,13 +8,16 @@ class User;
 class ConnectedUser;
 class RegistredUser;
 class CmdHandler;
+class Channel;
 
 #include "command.hpp"
 #include "irc_user.hpp"
+#include "channel.hpp"
 
 typedef std::map<int, ConnectedUser> CONNECTED_USERS_MAP;
 typedef std::map<std::string, RegistredUser> REGISTRED_USERS_MAP;
 typedef std::map<std::string, CmdHandler *> COMMANDS_MAP;
+typedef std::map<std::string, Channel> CHANNELS_MAP;
 
 class Context
 {
@@ -23,6 +26,7 @@ private:
     CONNECTED_USERS_MAP connected_users;
     REGISTRED_USERS_MAP registred_users;
     COMMANDS_MAP commands;
+    CHANNELS_MAP channels;
 
     // one context only should exists
     Context &operator=(const Context &other);

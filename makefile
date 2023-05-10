@@ -1,9 +1,11 @@
 NAME = ircserv
 
 ODIR = build
-SRCS = command.cpp context.cpp irc_user.cpp main.cpp str-utils.cpp
+SRCS = channel.cpp command.cpp context.cpp irc_user.cpp main.cpp str-utils.cpp
+
+
 OBJS = ${patsubst %.cpp, ${ODIR}/%.o, ${SRCS}}
-HEADERS = command.hpp context.hpp irc_user.hpp str-utils.hpp
+HEADERS = channel.hpp command.hpp context.hpp irc_user.hpp str-utils.hpp
 
 INC =
 FLAGS = -Wall -Wextra -Werror -std=c++98
