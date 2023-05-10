@@ -138,3 +138,23 @@ void NickCommand::run(User &user, const std::string &args)
         user.nickname = args;
     }
 }
+
+/**
+ * LIST COMMAND
+ */
+ListCommand::ListCommand(Context *context)
+    : CmdHandler(context)
+{
+}
+
+void ListCommand::validate(User &user, const std::string &args)
+{
+    (void)user;
+    (void)args;
+}
+
+void ListCommand::run(User &user, const std::string &args)
+{
+    (void)user;
+    (void)args;
+}
