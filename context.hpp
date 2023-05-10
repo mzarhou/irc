@@ -28,7 +28,6 @@ private:
     Context &operator=(const Context &other);
 
 public:
-    int last_connected;
     Context(const std::string passw);
     ~Context();
 
@@ -41,8 +40,8 @@ public:
 
     User *getSocketHandler(int sockfd);
     std::string getServerpassw(void);
-    
-    void sendClientMsg(int socketfd, std::string msg);
+
+    void sendClientMsg(User &user, const std::string &msg);
 };
 
 #endif

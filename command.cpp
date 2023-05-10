@@ -10,38 +10,30 @@ CmdHandler::CmdHandler(Context *context)
 /**
  * PASS COMMAND
  */
-
 PassCommand::PassCommand(Context *context)
     : CmdHandler(context)
 {
 }
-int PassCommand::validate(User &user, const std::string &args)
+
+void PassCommand::validate(User &user, const std::string &args)
 {
-    // (void)user;
-    // (void)args;
-    // int bytes_sent;
+    (void)user;
     std::cout << "validate PassCommand " << std::endl;
     if (args.empty())
-    {
-        user.context->sendClientMsg(user.context->last_connected, ":localhost 461 * PASS :Not enough parameters\n");
-        return 0;
-    }
-    else if (args.compare(user.context->getServerpassw()) != 0)
-    {
-        user.context->sendClientMsg(user.context->last_connected, ":localhost 464 * PASS :Password incorrect\n");
-        return 0;
-    }
-    return 1;
+        throw std::invalid_argument(":localhost 461 * PASS :Not enough parameters\n");
+    else if (args.compare(context->getServerpassw()) != 0)
+        throw std::invalid_argument(":localhost 464 * PASS :Password incorrect\n");
 }
 
 void PassCommand::run(User &user, const std::string &args)
 {
-    // (void)user;
-    // (void)args;
     user.password = args;
-    std::cout << "run PassCommand " << std::endl;
+    std::cout << "run PassCommand with passw: " << args << std::endl;
 }
 
+/**
+ * USER COMMAND
+ */
 UserCommand::UserCommand(Context *context)
     : CmdHandler(context)
 {
@@ -54,22 +46,23 @@ int check_args(std::string args)
     std::istringstream ss(args);
     std::string token, tmp;
     int i = 0;
-    while(std::getline(ss, token, ' ')) {
+    while (std::getline(ss, token, ' '))
+    {
         if (i == 0)
             tmp = token;
         if (i == 1)
         {
-            if(token.compare("0") != 0)
+            if (token.compare("0") != 0)
                 return 0;
         }
         if (i == 2)
         {
-            if(token.compare("*") != 0)
+            if (token.compare("*") != 0)
                 return 0;
         }
         if (i == 3)
         {
-            if(token.compare(tmp) == 0)
+            if (token.compare(tmp) == 0)
                 return 0;
         }
         i++;
@@ -79,41 +72,28 @@ int check_args(std::string args)
     return 1;
 }
 
-int UserCommand::validate(User &user, const std::string &args)
+void UserCommand::validate(User &user, const std::string &args)
 {
-    // (void)user;
-    // (void)args;
     if (user.password.empty())
-    {
-        user.context->sendClientMsg(user.context->last_connected, ":localhost * :No password given\n");
-        return 0;
-    }
-    std::cout << args << std::endl;
-    if (!args.empty() && check_args(args))
-    {
-        std::cout << "validate UserCommand " << std::endl;
-        return 1;
-    }
-    else
-        user.context->sendClientMsg(user.context->last_connected, ":localhost 461 * USER :Not enough parameters\n");
-    return 0;
+        throw std::invalid_argument(":localhost * :No password given\n");
+    if (args.empty() || !check_args(args))
+        throw std::invalid_argument(":localhost 461 * USER :Not enough parameters\n");
 }
 
 void UserCommand::run(User &user, const std::string &args)
 {
-    // (void)user;
-    // (void)args;
     std::cout << "run UserCommand " << std::endl;
     std::istringstream ss(args);
     std::string token, tmp;
     int i = 0;
-    while(std::getline(ss, token, ' ')) {
+    while (std::getline(ss, token, ' '))
+    {
         if (i == 0)
             user.username = token;
         if (i == 1)
-            //add rule
-        if (i == 3)
-            user.realname = token;
+            // add rule
+            if (i == 3)
+                user.realname = token;
         i++;
     }
 }
@@ -121,36 +101,21 @@ void UserCommand::run(User &user, const std::string &args)
 /**
  * NICK COMMAND
  */
-
 NickCommand::NickCommand(Context *context)
     : CmdHandler(context)
 {
 }
-int NickCommand::validate(User &user, const std::string &args)
+
+void NickCommand::validate(User &user, const std::string &args)
 {
-    // (void)user;
-    // (void)args;
     if (user.password.empty())
-    {
-        user.context->sendClientMsg(user.context->last_connected, ":localhost * :No password given\n");
-        return 0;
-    }
+        throw std::invalid_argument(":localhost * :No password given\n");
     if (args.empty())
-    {
-        user.context->sendClientMsg(user.context->last_connected, ":localhost 431 * :No nickname given\n");
-        return 0;
-    }
-    else
-    {
-        std::cout << "validate NickCommand " << std::endl;
-        return 1;
-    }
+        throw std::invalid_argument(":localhost 431 * :No nickname given\n");
 }
 
 void NickCommand::run(User &user, const std::string &args)
 {
-    // (void)user;
-    // (void)args;
     std::cout << "run NickCommand " << std::endl;
     if (!args.empty())
     {

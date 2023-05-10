@@ -25,7 +25,7 @@ protected:
 public:
     CmdHandler(Context *context);
     virtual ~CmdHandler();
-    virtual int validate(User &user, const std::string &args) = 0;
+    virtual void validate(User &user, const std::string &args) = 0;
     virtual void run(User &user, const std::string &args) = 0;
 };
 
@@ -33,7 +33,7 @@ class PassCommand : public CmdHandler
 {
 public:
     PassCommand(Context *context);
-    int validate(User &user, const std::string &args);
+    void validate(User &user, const std::string &args);
     void run(User &user, const std::string &args);
 };
 
@@ -41,7 +41,7 @@ class NickCommand : public CmdHandler
 {
 public:
     NickCommand(Context *context);
-    int validate(User &user, const std::string &args);
+    void validate(User &user, const std::string &args);
     void run(User &user, const std::string &args);
 };
 
@@ -49,7 +49,7 @@ class UserCommand : public CmdHandler
 {
 public:
     UserCommand(Context *context);
-    int validate(User &user, const std::string &args);
+    void validate(User &user, const std::string &args);
     void run(User &user, const std::string &args);
 };
 
