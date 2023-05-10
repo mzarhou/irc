@@ -57,7 +57,18 @@ void ConnectedUser::handleSocket(const Command &cmd)
     CmdHandler *command = context->getCommand(cmd.name);
     if (!command)
     {
-        // throw std::invalid_argument("invalid command");
+        return;
+    }
+
+    /**
+     * user must register before sending other valid commands
+     * than this ones
+     */
+    std::string cmds[] = {"PASS", "USER", "NICK"};
+    std::string *it = std::find(std::begin(cmds), std::end(cmds), cmd.name);
+    if (it == std::end(cmds))
+    {
+        context->sendClientMsg(*this, ":localhost 451 * LIST :You must finish connecting with another nickname first.\n");
     }
     else
     {

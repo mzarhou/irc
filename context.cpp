@@ -7,6 +7,7 @@ Context::Context(const std::string passw) : serverpassw(passw)
     this->registerCommand("USER", new UserCommand(this));
     this->registerCommand("NICK", new NickCommand(this));
     this->registerCommand("PASS", new PassCommand(this));
+    this->registerCommand("LIST", new ListCommand(this));
 }
 
 Context::~Context()
