@@ -1,6 +1,6 @@
 #include "irc_user.hpp"
 
-User::User(Context *context, int sockfd) : context(context), fd(sockfd), nickname(""), login(""){};
+User::User(Context *context, int sockfd) : context(context), fd(sockfd), nickname(""), username(""){};
 
 User::User(const User &other)
 {
@@ -12,7 +12,7 @@ User::User(const User &other)
 //     this->context = other.context;
 //     this->fd = other.fd;
 //     this->nickname = other.nickname;
-//     this->login = other.login;
+//     this->username = other.username;
 //     return *this;
 // }
 
@@ -61,19 +61,25 @@ void ConnectedUser::handleSocket(const Command &cmd)
     }
     else
     {
-        command->validate(*this, cmd.args);
-        command->run(*this, cmd.args);
-        onChange();
+        if (command->validate(*this, cmd.args))
+            command->run(*this, cmd.args);
+        onChange(*this);
     }
 }
 
-void ConnectedUser::onChange()
+void ConnectedUser::onChange(User &user)
 {
-    if (nickname.empty() || login.empty() || password.empty())
+    if (!user.nickname.empty() && !user.username.empty() && !user.password.empty())
     {
+        user.context->sendClientMsg(user.context->last_connected, ":localhost ");
+        user.context->sendClientMsg(user.context->last_connected, user.nickname);
+        user.context->sendClientMsg(user.context->last_connected, " :Welcome to the 1337.server.chat Internet Relay Chat Network ");
+        user.context->sendClientMsg(user.context->last_connected, user.nickname);
+        user.context->sendClientMsg(user.context->last_connected, "\n");
+        
+        context->registerUser(*this);
         return;
     }
-    context->registerUser(*this);
 }
 
 /**

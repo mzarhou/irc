@@ -27,6 +27,7 @@ void Context::registerCommand(const std::string &name, CmdHandler *handler)
 void Context::addNewUser(int sockfd)
 {
     ConnectedUser new_user(this, sockfd);
+    this->last_connected = sockfd;
     connected_users[sockfd] = new_user;
 }
 
@@ -82,4 +83,16 @@ void Context::registerUser(ConnectedUser &user)
 {
     // TODO: register user
     std::cout << "registring new user " << user.nickname << std::endl;
+}
+
+std::string Context::getServerpassw(void)
+{
+    return (this->serverpassw);
+}
+
+void Context::sendClientMsg(int socketfd, std::string msg)
+{
+    if (send(socketfd, msg.c_str(), msg.length(), 0) == -1) {
+        perror("send");
+    }
 }
