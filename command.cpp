@@ -108,10 +108,26 @@ NickCommand::NickCommand(Context *context)
 
 void NickCommand::validate(User &user, const std::string &args)
 {
+    // TODO: check nickname syntax
     if (user.password.empty())
         throw std::invalid_argument(":localhost * :No password given\n");
     if (args.empty())
         throw std::invalid_argument(":localhost 431 * :No nickname given\n");
+    if (context->isNickNameRegistred(args))
+    {
+        std::ostringstream oss;
+        oss << ":localhost 433 * " << args << " :Nickname is already in use.\n";
+        throw std::invalid_argument(oss.str());
+    }
+
+    /**
+     * disconnect old connected user with similar nickname if exists
+     */
+    if (context->isNickNameConnected(args))
+    {
+        context->sendClientMsg(context->findConnectedUsersByNickName(args)->second, "ERROR :Closing Link: 0.0.0.0 (Overridden)\n");
+        context->disconnectUser(args);
+    }
 }
 
 void NickCommand::run(User &user, const std::string &args)

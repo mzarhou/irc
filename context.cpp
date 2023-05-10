@@ -1,4 +1,5 @@
 #include "context.hpp"
+#include <unistd.h>
 
 Context::Context(const std::string passw) : serverpassw(passw)
 {
@@ -57,7 +58,7 @@ User *Context::getSocketHandler(int sockfd)
 REGISTRED_USERS_MAP::iterator Context::findRegistredUserByFd(int fd)
 {
     REGISTRED_USERS_MAP::iterator it = registred_users.begin();
-    while (it != registred_users.end())
+    for (; it != registred_users.end(); it++)
     {
         if (it->second.fd == fd)
         {
@@ -67,7 +68,29 @@ REGISTRED_USERS_MAP::iterator Context::findRegistredUserByFd(int fd)
     return it;
 }
 
-void Context::onUserDeconnected(int fd)
+CONNECTED_USERS_MAP::iterator Context::findConnectedUsersByNickName(const std::string &nickname)
+{
+    CONNECTED_USERS_MAP::iterator it = connected_users.begin();
+    for (; it != connected_users.end(); it++)
+    {
+        if (it->second.nickname == nickname)
+            return it;
+    }
+    return it;
+}
+
+bool Context::isNickNameRegistred(const std::string &nickname)
+{
+    REGISTRED_USERS_MAP::const_iterator it = registred_users.find(nickname);
+    return (it != registred_users.end());
+}
+bool Context::isNickNameConnected(const std::string &nickname)
+{
+    CONNECTED_USERS_MAP::iterator it = findConnectedUsersByNickName(nickname);
+    return (it != connected_users.end());
+}
+
+void Context::disconnectUser(int fd)
 {
     connected_users.erase(fd);
 
@@ -75,6 +98,24 @@ void Context::onUserDeconnected(int fd)
     if (registred_pos != registred_users.end())
     {
         registred_users.erase(registred_pos);
+    }
+    close(fd);
+}
+
+void Context::disconnectUser(const std::string &nickname)
+{
+    CONNECTED_USERS_MAP::iterator connected_user_it = findConnectedUsersByNickName(nickname);
+    if (connected_user_it != connected_users.end())
+    {
+        disconnectUser(connected_user_it->second.fd);
+    }
+    else
+    {
+        REGISTRED_USERS_MAP::const_iterator registred_user_it = registred_users.find(nickname);
+        if (registred_user_it != registred_users.end())
+        {
+            disconnectUser(registred_user_it->second.fd);
+        }
     }
 }
 

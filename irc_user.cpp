@@ -76,6 +76,7 @@ void ConnectedUser::handleSocket(const Command &cmd)
 
 void ConnectedUser::onChange()
 {
+    std::cout << "-> socket fd: " << fd << '\n';
     std::cout << "-> nickname: " << nickname << '\n';
     std::cout << "-> username: " << username << '\n';
     std::cout << "-> password: " << password << '\n';
