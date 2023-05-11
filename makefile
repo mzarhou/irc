@@ -5,7 +5,8 @@ SRCS = channel.cpp command.cpp context.cpp irc_user.cpp main.cpp str-utils.cpp
 
 
 OBJS = ${patsubst %.cpp, ${ODIR}/%.o, ${SRCS}}
-HEADERS = channel.hpp command.hpp context.hpp irc_user.hpp str-utils.hpp
+HEADERS = channel.hpp command.hpp context.hpp errors.hpp irc_user.hpp str-utils.hpp
+
 
 INC =
 FLAGS = -Wall -Wextra -Werror -std=c++98

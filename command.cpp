@@ -183,19 +183,23 @@ JoinCommand::JoinCommand(Context *context)
 {
 }
 
-void JoinCommand::validate(User &user, const std::string &args)
+void JoinCommand::validate(User &user, const std::string &tag)
 {
+    // TODO: modes
     (void)user;
-    (void)args;
+
+    if (tag.length() == 0)
+        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
+    if (tag[0] != '#')
+        throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, tag));
     std::cout << "validating join command"
               << "args |"
-              << args
+              << tag
               << "|\n";
 }
 
-void JoinCommand::run(User &user, const std::string &args)
+void JoinCommand::run(User &user, const std::string &tag)
 {
-    (void)user;
-    (void)args;
     std::cout << "running join command" << std::endl;
+    context->joinUserToChannel(user, tag);
 }

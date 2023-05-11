@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include "irc_user.hpp"
+#include "errors.hpp"
 
 class Context;
 
