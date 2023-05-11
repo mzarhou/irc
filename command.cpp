@@ -188,18 +188,26 @@ void JoinCommand::validate(User &user, const std::string &tag)
     // TODO: modes
     (void)user;
 
+    if (tag.find(',') != std::string::npos)
+    {
+        std::cout << "multiple channels" << std::endl;
+        std::istringstream iss(tag);
+        std::string arg;
+        while (std::getline(iss, arg, ','))
+        {
+            std::string message = "JOIN " + arg;
+            user.handleSocket(Command::fromMessage(message));
+        }
+        throw std::invalid_argument("");
+    }
     if (tag.length() == 0)
         throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
     if (tag[0] != '#')
         throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, tag));
-    std::cout << "validating join command"
-              << "args |"
-              << tag
-              << "|\n";
 }
 
 void JoinCommand::run(User &user, const std::string &tag)
 {
-    std::cout << "running join command" << std::endl;
+    std::cout << "running join command -> " << tag << std::endl;
     context->joinUserToChannel(user, tag);
 }

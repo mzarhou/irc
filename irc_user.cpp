@@ -22,6 +22,8 @@ bool User::isGuest()
 
 void User::send(const std::string &msg)
 {
+    if (msg.length() == 0)
+        return;
     if (::send(this->fd, msg.c_str(), msg.length(), 0) == -1)
     {
         perror("send");
