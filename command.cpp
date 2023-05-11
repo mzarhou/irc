@@ -93,7 +93,7 @@ void UserCommand::run(User &user, const std::string &args)
     while (std::getline(ss, token, ' '))
     {
         if (i == 0)
-            user.username = token;
+            user.username = "~" + token;
         if (i == 1)
             // add rule
             if (i == 3)
@@ -146,7 +146,7 @@ void NickCommand::run(User &user, const std::string &newNickname)
     }
 
     std::ostringstream oss;
-    oss << ":" << user.nickname << "!~" << user.username << "@localhost NICK :" << newNickname << '\n';
+    oss << ":" << user.nickname << "!" << user.username << "@localhost NICK :" << newNickname << '\n';
 
     user.nickname = newNickname;
 
