@@ -52,7 +52,8 @@ public:
 
     void sendClientMsg(User &user, const std::string &msg);
 
-    void createNewChannel(const std::string &tag);
+    Channel &createNewChannel(const std::string &tag);
+    void joinUserToChannel(User &user, const std::string &tag);
 };
 
 #endif

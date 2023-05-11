@@ -18,9 +18,11 @@ public:
     Channel();
     Channel(Context *context, const std::string &tag);
     ~Channel();
-    std::string getTag();
 
     Channel &operator=(const Channel &other);
+
+    void addNewUser(RegistredUser &user);
+    std::string getTag();
 };
 
 #endif

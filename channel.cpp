@@ -25,3 +25,8 @@ Channel &Channel::operator=(const Channel &other)
     this->users = other.users;
     return *this;
 }
+
+void Channel::addNewUser(RegistredUser &user)
+{
+    users[user.fd] = user;
+}

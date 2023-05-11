@@ -62,4 +62,13 @@ public:
     void run(User &user, const std::string &args);
 };
 
+class JoinCommand : public CmdHandler
+{
+
+public:
+    JoinCommand(Context *context);
+    void validate(User &user, const std::string &args);
+    void run(User &user, const std::string &args);
+};
+
 #endif

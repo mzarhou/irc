@@ -8,6 +8,7 @@ Context::Context(const std::string passw) : serverpassw(passw)
     this->registerCommand("NICK", new NickCommand(this));
     this->registerCommand("PASS", new PassCommand(this));
     this->registerCommand("LIST", new ListCommand(this));
+    this->registerCommand("JOIN", new JoinCommand(this));
 }
 
 Context::~Context()
@@ -147,12 +148,26 @@ void Context::sendClientMsg(User &user, const std::string &msg)
     }
 }
 
-void Context::createNewChannel(const std::string &tag)
+Channel &Context::createNewChannel(const std::string &tag)
 {
-    CHANNELS_MAP::iterator it = channels.find(tag);
-    if (it != channels.end())
-        throw std::invalid_argument("channel already exists");
     Channel c(this, tag);
+
     channels[tag] = c;
+    CHANNELS_MAP::iterator it = channels.find(tag);
+    if (it == channels.end())
+    {
+        std::ostringstream oss;
+        oss << "UNKOWN error occured when creating channel " << tag << std::endl;
+        throw std::invalid_argument(oss.str());
+    }
+    return it->second;
 }
 
+void Context::joinUserToChannel(User &user, const std::string &tag)
+{
+    REGISTRED_USERS_MAP::iterator it = registred_users.find(user.fd);
+    if (it == registred_users.end())
+        throw std::invalid_argument("User is not registred");
+    Channel &ch = createNewChannel(tag);
+    ch.addNewUser(it->second);
+}

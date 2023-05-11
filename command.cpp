@@ -163,3 +163,28 @@ void ListCommand::run(User &user, const std::string &args)
     (void)user;
     (void)args;
 }
+
+/**
+ * JOIN COMMAND
+ */
+JoinCommand::JoinCommand(Context *context)
+    : CmdHandler(context)
+{
+}
+
+void JoinCommand::validate(User &user, const std::string &args)
+{
+    (void)user;
+    (void)args;
+    std::cout << "validating join command"
+              << "args |"
+              << args
+              << "|\n";
+}
+
+void JoinCommand::run(User &user, const std::string &args)
+{
+    (void)user;
+    (void)args;
+    std::cout << "running join command" << std::endl;
+}
