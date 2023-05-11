@@ -132,10 +132,15 @@ void NickCommand::validate(User &user, const std::string &args)
 
 void NickCommand::run(User &user, const std::string &args)
 {
+    std::string old;
     std::cout << "run NickCommand " << std::endl;
-    if (!args.empty())
+    old = user.nickname;
+    user.nickname = args;
+    if (context->isNickNameRegistred(user.nickname))
     {
-        user.nickname = args;
+        std::ostringstream oss;
+        oss << ":" << old << "!~" << user.username << "@localhost NICK :" << user.nickname << '\n';
+        context->sendClientMsg(user, oss.str());
     }
 }
 

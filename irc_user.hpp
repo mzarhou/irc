@@ -29,6 +29,10 @@ public: // constructors
     User(const User &other);
     // User &operator=(const User &other);
     virtual ~User();
+    void setNickname(const std::string &value);
+    void setRealname(const std::string &value);
+    void setUsername(const std::string &value);
+    void setPassword(const std::string &value);
 
 public:
     virtual void handleSocket(const Command &cmd) = 0;

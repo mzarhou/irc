@@ -48,7 +48,7 @@ User *Context::getSocketHandler(int sockfd)
     {
         return &connected_pos->second;
     }
-    REGISTRED_USERS_MAP::iterator registred_pos = findRegistredUserByFd(sockfd);
+    REGISTRED_USERS_MAP::iterator registred_pos = registred_users.find(sockfd);
     if (registred_pos != registred_users.end())
     {
         return &registred_pos->second;
@@ -56,12 +56,12 @@ User *Context::getSocketHandler(int sockfd)
     throw std::invalid_argument("invalid socket file descriptor");
 }
 
-REGISTRED_USERS_MAP::iterator Context::findRegistredUserByFd(int fd)
+REGISTRED_USERS_MAP::iterator Context::findRegistredUserByNickname(const std::string &nickname)
 {
     REGISTRED_USERS_MAP::iterator it = registred_users.begin();
     for (; it != registred_users.end(); it++)
     {
-        if (it->second.fd == fd)
+        if (it->second.nickname == nickname)
         {
             return it;
         }
@@ -82,7 +82,7 @@ CONNECTED_USERS_MAP::iterator Context::findConnectedUsersByNickName(const std::s
 
 bool Context::isNickNameRegistred(const std::string &nickname)
 {
-    REGISTRED_USERS_MAP::const_iterator it = registred_users.find(nickname);
+    REGISTRED_USERS_MAP::const_iterator it = findRegistredUserByNickname(nickname);
     return (it != registred_users.end());
 }
 bool Context::isNickNameConnected(const std::string &nickname)
@@ -95,7 +95,7 @@ void Context::disconnectUser(int fd)
 {
     connected_users.erase(fd);
 
-    REGISTRED_USERS_MAP::iterator registred_pos = findRegistredUserByFd(fd);
+    REGISTRED_USERS_MAP::iterator registred_pos = registred_users.find(fd);
     if (registred_pos != registred_users.end())
     {
         registred_users.erase(registred_pos);
@@ -112,7 +112,7 @@ void Context::disconnectUser(const std::string &nickname)
     }
     else
     {
-        REGISTRED_USERS_MAP::const_iterator registred_user_it = registred_users.find(nickname);
+        REGISTRED_USERS_MAP::const_iterator registred_user_it = findRegistredUserByNickname(nickname);
         if (registred_user_it != registred_users.end())
         {
             disconnectUser(registred_user_it->second.fd);
@@ -124,8 +124,14 @@ void Context::registerUser(ConnectedUser &user)
 {
     std::cout << "registring new user " << user.nickname << std::endl;
     connected_users.erase(user.fd);
+
     RegistredUser ruser(this, user.fd);
-    registred_users[user.nickname] = ruser;
+    ruser.setNickname(user.nickname);
+    ruser.setRealname(user.realname);
+    ruser.setUsername(user.username);
+    ruser.setPassword(user.password);
+
+    registred_users[user.fd] = ruser;
 }
 
 std::string Context::getServerpassw(void)

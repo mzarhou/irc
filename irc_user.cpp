@@ -12,6 +12,26 @@ User::User(const User &other)
 
 User::~User() {}
 
+void User::setNickname(const std::string &value)
+{
+    this->nickname = value;
+}
+
+void User::setRealname(const std::string &value)
+{
+    this->realname = value;
+}
+
+void User::setUsername(const std::string &value)
+{
+    this->username = value;
+}
+
+void User::setPassword(const std::string &value)
+{
+    this->password = value;
+}
+
 Command User::parseIntoCmd(std::string &message)
 {
     Command cmd;

@@ -5,7 +5,7 @@ class Context;
 
 #include "context.hpp"
 
-typedef std::map<std::string, RegistredUser> REGISTRED_USERS_MAP;
+typedef std::map<int, RegistredUser> REGISTRED_USERS_MAP;
 
 class Channel
 {

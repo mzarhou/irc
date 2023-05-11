@@ -15,7 +15,7 @@ class Channel;
 #include "channel.hpp"
 
 typedef std::map<int, ConnectedUser> CONNECTED_USERS_MAP;
-typedef std::map<std::string, RegistredUser> REGISTRED_USERS_MAP;
+typedef std::map<int, RegistredUser> REGISTRED_USERS_MAP;
 typedef std::map<std::string, CmdHandler *> COMMANDS_MAP;
 typedef std::map<std::string, Channel> CHANNELS_MAP;
 
@@ -39,7 +39,7 @@ public:
     CmdHandler *getCommand(const std::string &name);
 
     void addNewUser(int sockfd);
-    REGISTRED_USERS_MAP::iterator findRegistredUserByFd(int fd);
+    REGISTRED_USERS_MAP::iterator findRegistredUserByNickname(const std::string &nickname);
     CONNECTED_USERS_MAP::iterator findConnectedUsersByNickName(const std::string &nickname);
     bool isNickNameRegistred(const std::string &nickname);
     bool isNickNameConnected(const std::string &nickname);
