@@ -113,6 +113,8 @@ void NickCommand::validate(User &user, const std::string &args)
         throw std::invalid_argument(":localhost * :No password given\n");
     if (args.empty())
         throw std::invalid_argument(":localhost 431 * :No nickname given\n");
+    if (user.nickname == args)
+        return;
     if (context->isNickNameRegistred(args))
     {
         std::ostringstream oss;
@@ -130,18 +132,22 @@ void NickCommand::validate(User &user, const std::string &args)
     }
 }
 
-void NickCommand::run(User &user, const std::string &args)
+void NickCommand::run(User &user, const std::string &newNickname)
 {
-    std::string old;
     std::cout << "run NickCommand " << std::endl;
-    old = user.nickname;
-    user.nickname = args;
-    if (context->isNickNameRegistred(user.nickname))
+
+    if (user.nickname == newNickname)
     {
-        std::ostringstream oss;
-        oss << ":" << old << "!~" << user.username << "@localhost NICK :" << user.nickname << '\n';
-        context->sendClientMsg(user, oss.str());
+        return;
     }
+
+    std::ostringstream oss;
+    oss << ":" << user.nickname << "!~" << user.username << "@localhost NICK :" << newNickname << '\n';
+
+    user.nickname = newNickname;
+
+    if (context->isNickNameRegistred(newNickname))
+        context->sendClientMsg(user, oss.str());
 }
 
 /**
