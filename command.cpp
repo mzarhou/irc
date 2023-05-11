@@ -76,6 +76,8 @@ int check_args(std::string args)
 
 void UserCommand::validate(User &user, const std::string &args)
 {
+    if (user.isRegistred())
+        throw std::invalid_argument(":localhost 462 * :You are already connected and cannot handshake again\n");
     if (user.password.empty())
         throw std::invalid_argument(":localhost * :No password given\n");
     if (args.empty() || !check_args(args))
