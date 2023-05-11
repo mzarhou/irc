@@ -30,3 +30,14 @@ void Channel::addNewUser(RegistredUser &user)
 {
     users[user.fd] = user;
 }
+
+bool Channel::hasUser(User &user)
+{
+    REGISTRED_USERS_MAP::iterator it = users.find(user.fd);
+    return (it != users.end());
+}
+
+void Channel::kickUser(User &user)
+{
+    users.erase(user.fd);
+}

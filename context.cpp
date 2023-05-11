@@ -154,17 +154,20 @@ std::string Context::getServerpassw(void)
 
 Channel &Context::createNewChannel(const std::string &tag)
 {
-    Channel c(this, tag);
-
-    channels[tag] = c;
     CHANNELS_MAP::iterator it = channels.find(tag);
-    if (it == channels.end())
+    if (it != channels.end())
+        return it->second;
+
+    Channel c(this, tag);
+    channels[tag] = c;
+    CHANNELS_MAP::iterator it2 = channels.find(tag);
+    if (it2 == channels.end())
     {
         std::ostringstream oss;
         oss << "UNKOWN error occured when creating channel " << tag << std::endl;
         throw std::invalid_argument(oss.str());
     }
-    return it->second;
+    return it2->second;
 }
 
 void Context::joinUserToChannel(User &user, const std::string &tag)
@@ -174,4 +177,17 @@ void Context::joinUserToChannel(User &user, const std::string &tag)
         throw std::invalid_argument("User is not registred");
     Channel &ch = createNewChannel(tag);
     ch.addNewUser(it->second);
+}
+
+void Context::kickUserFromAllChannels(User &user)
+{
+    CHANNELS_MAP::iterator it = channels.begin();
+    for (; it != channels.end(); it++)
+    {
+        Channel &ch = it->second;
+        if (!ch.hasUser(user))
+            continue;
+        std::string message = "PART " + ch.getTag();
+        user.handleSocket(Command::fromMessage(message));
+    }
 }

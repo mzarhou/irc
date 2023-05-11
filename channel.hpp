@@ -23,6 +23,8 @@ public:
 
     void addNewUser(RegistredUser &user);
     std::string getTag();
+    bool hasUser(User &user);
+    void kickUser(User &user);
 };
 
 #endif

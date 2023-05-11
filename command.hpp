@@ -82,7 +82,6 @@ public:
 
 class JoinCommand : public CmdHandler
 {
-
 public:
     JoinCommand(Context *context);
     void validate(User &user, const std::string &args);
