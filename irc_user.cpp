@@ -20,6 +20,14 @@ bool User::isGuest()
     return context->isUserGuest(*this);
 }
 
+void User::send(const std::string &msg)
+{
+    if (::send(this->fd, msg.c_str(), msg.length(), 0) == -1)
+    {
+        perror("send");
+    }
+}
+
 User::~User() {}
 
 void User::setNickname(const std::string &value)
@@ -40,23 +48,6 @@ void User::setUsername(const std::string &value)
 void User::setPassword(const std::string &value)
 {
     this->password = value;
-}
-
-Command User::parseIntoCmd(std::string &message)
-{
-    Command cmd;
-
-    cmd.originalName = getFirstWord(message.c_str());
-
-    message = trim(message);
-    message = upperFirstWord(message.c_str());
-    std::istringstream ss(message);
-    size_t npos = message.find_first_of(" \t\n\r\v\f");
-    if (npos == std::string::npos)
-        return (Command){cmd.originalName, message, ""};
-    cmd.name = message.substr(0, npos);
-    cmd.args = trim(message.substr(npos));
-    return cmd;
 }
 
 /**
@@ -86,7 +77,7 @@ void GuestUser::handleSocket(const Command &cmd)
     std::string *it = std::find(std::begin(cmds), std::end(cmds), cmd.name);
     if (it == std::end(cmds))
     {
-        context->sendClientMsg(*this, ":localhost 451 * LIST :You must finish connecting with another nickname first.\n");
+        this->send(":localhost 451 * LIST :You must finish connecting with another nickname first.\n");
     }
     else
     {
@@ -98,7 +89,7 @@ void GuestUser::handleSocket(const Command &cmd)
         }
         catch (const std::exception &e)
         {
-            context->sendClientMsg(*this, e.what());
+            this->send(e.what());
         }
     }
 }
@@ -114,7 +105,7 @@ void GuestUser::onChange()
 
     std::ostringstream oss;
     oss << ":localhost " << nickname << " :Welcome to the 1337.server.chat Internet Relay Chat Network " << nickname << '\n';
-    context->sendClientMsg(*this, oss.str());
+    this->send(oss.str());
     context->registerUser(*this);
 }
 
@@ -138,7 +129,7 @@ void RegistredUser::handleSocket(const Command &cmd)
     {
         std::ostringstream oss;
         oss << ":localhost 421 " << nickname << " " << cmd.originalName << " :Unknown command\n";
-        context->sendClientMsg(*this, oss.str());
+        this->send(oss.str());
         return;
     }
 
@@ -149,6 +140,6 @@ void RegistredUser::handleSocket(const Command &cmd)
     }
     catch (const std::exception &e)
     {
-        context->sendClientMsg(*this, e.what());
+        this->send(e.what());
     }
 }

@@ -70,7 +70,7 @@ REGISTRED_USERS_MAP::iterator Context::findRegistredUserByNickname(const std::st
     return it;
 }
 
-GUEST_USERS_MAP::iterator Context::findGuestUsersByNickName(const std::string &nickname)
+GUEST_USERS_MAP::iterator Context::findGuestUserByNickName(const std::string &nickname)
 {
     GUEST_USERS_MAP::iterator it = guest_users.begin();
     for (; it != guest_users.end(); it++)
@@ -88,7 +88,7 @@ bool Context::isNickNameRegistred(const std::string &nickname)
 }
 bool Context::isNickNameGuest(const std::string &nickname)
 {
-    GUEST_USERS_MAP::iterator it = findGuestUsersByNickName(nickname);
+    GUEST_USERS_MAP::iterator it = findGuestUserByNickName(nickname);
     return (it != guest_users.end());
 }
 
@@ -118,7 +118,7 @@ void Context::disconnectUser(int fd)
 
 void Context::disconnectUser(const std::string &nickname)
 {
-    GUEST_USERS_MAP::iterator guest_user_it = findGuestUsersByNickName(nickname);
+    GUEST_USERS_MAP::iterator guest_user_it = findGuestUserByNickName(nickname);
     if (guest_user_it != guest_users.end())
     {
         disconnectUser(guest_user_it->second.fd);
@@ -150,14 +150,6 @@ void Context::registerUser(GuestUser &user)
 std::string Context::getServerpassw(void)
 {
     return (this->serverpassw);
-}
-
-void Context::sendClientMsg(User &user, const std::string &msg)
-{
-    if (send(user.fd, msg.c_str(), msg.length(), 0) == -1)
-    {
-        perror("send");
-    }
 }
 
 Channel &Context::createNewChannel(const std::string &tag)

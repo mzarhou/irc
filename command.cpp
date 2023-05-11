@@ -131,7 +131,8 @@ void NickCommand::validate(User &user, const std::string &args)
      */
     if (context->isNickNameGuest(args))
     {
-        context->sendClientMsg(context->findGuestUsersByNickName(args)->second, "ERROR :Closing Link: 0.0.0.0 (Overridden)\n");
+        User &oldGuest = context->findGuestUserByNickName(args)->second;
+        oldGuest.send("ERROR :Closing Link: 0.0.0.0 (Overridden)\n");
         context->disconnectUser(args);
     }
 }
@@ -151,7 +152,7 @@ void NickCommand::run(User &user, const std::string &newNickname)
     user.nickname = newNickname;
 
     if (context->isNickNameRegistred(newNickname))
-        context->sendClientMsg(user, oss.str());
+        user.send(oss.str());
 }
 
 /**

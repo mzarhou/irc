@@ -32,6 +32,7 @@ public: // constructors
 
     bool isRegistred();
     bool isGuest();
+    void send(const std::string &msg);
 
     void setNickname(const std::string &value);
     void setRealname(const std::string &value);
@@ -40,9 +41,6 @@ public: // constructors
 
 public:
     virtual void handleSocket(const Command &cmd) = 0;
-
-public: // static
-    static Command parseIntoCmd(std::string &message);
 };
 
 class GuestUser : public User

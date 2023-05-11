@@ -40,7 +40,7 @@ public:
 
     void addNewUser(int sockfd);
     REGISTRED_USERS_MAP::iterator findRegistredUserByNickname(const std::string &nickname);
-    GUEST_USERS_MAP::iterator findGuestUsersByNickName(const std::string &nickname);
+    GUEST_USERS_MAP::iterator findGuestUserByNickName(const std::string &nickname);
     bool isNickNameRegistred(const std::string &nickname);
     bool isUserRegistred(const User &user);
     bool isUserGuest(const User &user);
@@ -51,8 +51,6 @@ public:
 
     User *getSocketHandler(int sockfd);
     std::string getServerpassw(void);
-
-    void sendClientMsg(User &user, const std::string &msg);
 
     Channel &createNewChannel(const std::string &tag);
     void joinUserToChannel(User &user, const std::string &tag);
