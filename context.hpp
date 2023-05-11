@@ -42,6 +42,8 @@ public:
     REGISTRED_USERS_MAP::iterator findRegistredUserByNickname(const std::string &nickname);
     CONNECTED_USERS_MAP::iterator findConnectedUsersByNickName(const std::string &nickname);
     bool isNickNameRegistred(const std::string &nickname);
+    bool isUserRegistred(const User &user);
+    bool isUserConnected(const User &user);
     bool isNickNameConnected(const std::string &nickname);
     void disconnectUser(int fd);
     void disconnectUser(const std::string &nickname);

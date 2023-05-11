@@ -19,7 +19,9 @@ void PassCommand::validate(User &user, const std::string &args)
 {
     (void)user;
     std::cout << "validate PassCommand " << std::endl;
-    if (args.empty())
+    if (user.isRegistred())
+        throw std::invalid_argument(":localhost 462 * :You are already connected and cannot handshake again\n");
+    else if (args.empty())
         throw std::invalid_argument(":localhost 461 * PASS :Not enough parameters\n");
     else if (args.compare(context->getServerpassw()) != 0)
         throw std::invalid_argument(":localhost 464 * PASS :Password incorrect\n");

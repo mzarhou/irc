@@ -92,6 +92,18 @@ bool Context::isNickNameConnected(const std::string &nickname)
     return (it != connected_users.end());
 }
 
+bool Context::isUserRegistred(const User &user)
+{
+    REGISTRED_USERS_MAP::const_iterator it = registred_users.find(user.fd);
+    return (it != registred_users.end());
+}
+
+bool Context::isUserConnected(const User &user)
+{
+    CONNECTED_USERS_MAP::const_iterator it = connected_users.find(user.fd);
+    return (it != connected_users.end());
+}
+
 void Context::disconnectUser(int fd)
 {
     connected_users.erase(fd);

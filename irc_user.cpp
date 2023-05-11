@@ -10,6 +10,16 @@ User::User(const User &other)
     *this = other;
 }
 
+bool User::isRegistred()
+{
+    return context->isUserRegistred(*this);
+}
+
+bool User::isConnected()
+{
+    return context->isUserConnected(*this);
+}
+
 User::~User() {}
 
 void User::setNickname(const std::string &value)
