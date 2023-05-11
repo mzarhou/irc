@@ -208,7 +208,7 @@ int main(int argc, char **argv)
                     std::string message;
                     while (std::getline(ss, message, '\n'))
                     {
-                        Command cmd = User::parseIntoCmd(message);
+                        Command cmd = Command::fromMessage(message);
                         User *user = context.getSocketHandler(client_fd);
                         user->handleSocket(cmd);
                     }

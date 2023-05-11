@@ -8,6 +8,7 @@ Context::Context(const std::string passw) : serverpassw(passw)
     this->registerCommand("NICK", new NickCommand(this));
     this->registerCommand("PASS", new PassCommand(this));
     this->registerCommand("LIST", new ListCommand(this));
+    this->registerCommand("JOIN", new JoinCommand(this));
 }
 
 Context::~Context()
@@ -28,8 +29,8 @@ void Context::registerCommand(const std::string &name, CmdHandler *handler)
 
 void Context::addNewUser(int sockfd)
 {
-    ConnectedUser new_user(this, sockfd);
-    connected_users[sockfd] = new_user;
+    GuestUser new_user(this, sockfd);
+    guest_users[sockfd] = new_user;
 }
 
 CmdHandler *Context::getCommand(const std::string &name)
@@ -43,12 +44,12 @@ CmdHandler *Context::getCommand(const std::string &name)
 
 User *Context::getSocketHandler(int sockfd)
 {
-    CONNECTED_USERS_MAP::iterator connected_pos = connected_users.find(sockfd);
-    if (connected_pos != connected_users.end())
+    GUEST_USERS_MAP::iterator guest_pos = guest_users.find(sockfd);
+    if (guest_pos != guest_users.end())
     {
-        return &connected_pos->second;
+        return &guest_pos->second;
     }
-    REGISTRED_USERS_MAP::iterator registred_pos = findRegistredUserByFd(sockfd);
+    REGISTRED_USERS_MAP::iterator registred_pos = registred_users.find(sockfd);
     if (registred_pos != registred_users.end())
     {
         return &registred_pos->second;
@@ -56,12 +57,12 @@ User *Context::getSocketHandler(int sockfd)
     throw std::invalid_argument("invalid socket file descriptor");
 }
 
-REGISTRED_USERS_MAP::iterator Context::findRegistredUserByFd(int fd)
+REGISTRED_USERS_MAP::iterator Context::findRegistredUserByNickname(const std::string &nickname)
 {
     REGISTRED_USERS_MAP::iterator it = registred_users.begin();
     for (; it != registred_users.end(); it++)
     {
-        if (it->second.fd == fd)
+        if (it->second.nickname == nickname)
         {
             return it;
         }
@@ -69,10 +70,10 @@ REGISTRED_USERS_MAP::iterator Context::findRegistredUserByFd(int fd)
     return it;
 }
 
-CONNECTED_USERS_MAP::iterator Context::findConnectedUsersByNickName(const std::string &nickname)
+GUEST_USERS_MAP::iterator Context::findGuestUserByNickName(const std::string &nickname)
 {
-    CONNECTED_USERS_MAP::iterator it = connected_users.begin();
-    for (; it != connected_users.end(); it++)
+    GUEST_USERS_MAP::iterator it = guest_users.begin();
+    for (; it != guest_users.end(); it++)
     {
         if (it->second.nickname == nickname)
             return it;
@@ -82,20 +83,32 @@ CONNECTED_USERS_MAP::iterator Context::findConnectedUsersByNickName(const std::s
 
 bool Context::isNickNameRegistred(const std::string &nickname)
 {
-    REGISTRED_USERS_MAP::const_iterator it = registred_users.find(nickname);
+    REGISTRED_USERS_MAP::const_iterator it = findRegistredUserByNickname(nickname);
     return (it != registred_users.end());
 }
-bool Context::isNickNameConnected(const std::string &nickname)
+bool Context::isNickNameGuest(const std::string &nickname)
 {
-    CONNECTED_USERS_MAP::iterator it = findConnectedUsersByNickName(nickname);
-    return (it != connected_users.end());
+    GUEST_USERS_MAP::iterator it = findGuestUserByNickName(nickname);
+    return (it != guest_users.end());
+}
+
+bool Context::isUserRegistred(const User &user)
+{
+    REGISTRED_USERS_MAP::const_iterator it = registred_users.find(user.fd);
+    return (it != registred_users.end());
+}
+
+bool Context::isUserGuest(const User &user)
+{
+    GUEST_USERS_MAP::const_iterator it = guest_users.find(user.fd);
+    return (it != guest_users.end());
 }
 
 void Context::disconnectUser(int fd)
 {
-    connected_users.erase(fd);
+    guest_users.erase(fd);
 
-    REGISTRED_USERS_MAP::iterator registred_pos = findRegistredUserByFd(fd);
+    REGISTRED_USERS_MAP::iterator registred_pos = registred_users.find(fd);
     if (registred_pos != registred_users.end())
     {
         registred_users.erase(registred_pos);
@@ -105,14 +118,14 @@ void Context::disconnectUser(int fd)
 
 void Context::disconnectUser(const std::string &nickname)
 {
-    CONNECTED_USERS_MAP::iterator connected_user_it = findConnectedUsersByNickName(nickname);
-    if (connected_user_it != connected_users.end())
+    GUEST_USERS_MAP::iterator guest_user_it = findGuestUserByNickName(nickname);
+    if (guest_user_it != guest_users.end())
     {
-        disconnectUser(connected_user_it->second.fd);
+        disconnectUser(guest_user_it->second.fd);
     }
     else
     {
-        REGISTRED_USERS_MAP::const_iterator registred_user_it = registred_users.find(nickname);
+        REGISTRED_USERS_MAP::const_iterator registred_user_it = findRegistredUserByNickname(nickname);
         if (registred_user_it != registred_users.end())
         {
             disconnectUser(registred_user_it->second.fd);
@@ -120,12 +133,18 @@ void Context::disconnectUser(const std::string &nickname)
     }
 }
 
-void Context::registerUser(ConnectedUser &user)
+void Context::registerUser(GuestUser &user)
 {
     std::cout << "registring new user " << user.nickname << std::endl;
-    connected_users.erase(user.fd);
+    guest_users.erase(user.fd);
+
     RegistredUser ruser(this, user.fd);
-    registred_users[user.nickname] = ruser;
+    ruser.setNickname(user.nickname);
+    ruser.setRealname(user.realname);
+    ruser.setUsername(user.username);
+    ruser.setPassword(user.password);
+
+    registred_users[user.fd] = ruser;
 }
 
 std::string Context::getServerpassw(void)
@@ -133,10 +152,42 @@ std::string Context::getServerpassw(void)
     return (this->serverpassw);
 }
 
-void Context::sendClientMsg(User &user, const std::string &msg)
+Channel &Context::createNewChannel(const std::string &tag)
 {
-    if (send(user.fd, msg.c_str(), msg.length(), 0) == -1)
+    CHANNELS_MAP::iterator it = channels.find(tag);
+    if (it != channels.end())
+        return it->second;
+
+    Channel c(this, tag);
+    channels[tag] = c;
+    CHANNELS_MAP::iterator it2 = channels.find(tag);
+    if (it2 == channels.end())
     {
-        perror("send");
+        std::ostringstream oss;
+        oss << "UNKOWN error occured when creating channel " << tag << std::endl;
+        throw std::invalid_argument(oss.str());
+    }
+    return it2->second;
+}
+
+void Context::joinUserToChannel(User &user, const std::string &tag)
+{
+    REGISTRED_USERS_MAP::iterator it = registred_users.find(user.fd);
+    if (it == registred_users.end())
+        throw std::invalid_argument("User is not registred");
+    Channel &ch = createNewChannel(tag);
+    ch.addNewUser(it->second);
+}
+
+void Context::kickUserFromAllChannels(User &user)
+{
+    CHANNELS_MAP::iterator it = channels.begin();
+    for (; it != channels.end(); it++)
+    {
+        Channel &ch = it->second;
+        if (!ch.hasUser(user))
+            continue;
+        std::string message = "PART " + ch.getTag();
+        user.handleSocket(Command::fromMessage(message));
     }
 }

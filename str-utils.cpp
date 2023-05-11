@@ -2,6 +2,7 @@
 #define STR_UTILS_HPP
 
 #include <string>
+#include <sstream>
 
 std::string ltrim(const std::string &str)
 {
@@ -34,6 +35,14 @@ std::string upperFirstWord(const char *message)
         str[i] = toupper(str[i]);
     }
     return str;
+}
+
+std::string getFirstWord(const char *message)
+{
+    std::string word;
+    std::istringstream iss(message);
+    iss >> word;
+    return word;
 }
 
 #endif

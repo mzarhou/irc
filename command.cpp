@@ -19,7 +19,9 @@ void PassCommand::validate(User &user, const std::string &args)
 {
     (void)user;
     std::cout << "validate PassCommand " << std::endl;
-    if (args.empty())
+    if (user.isRegistred())
+        throw std::invalid_argument(":localhost 462 * :You are already registred and cannot handshake again\n");
+    else if (args.empty())
         throw std::invalid_argument(":localhost 461 * PASS :Not enough parameters\n");
     else if (args.compare(context->getServerpassw()) != 0)
         throw std::invalid_argument(":localhost 464 * PASS :Password incorrect\n");
@@ -74,6 +76,8 @@ int check_args(std::string args)
 
 void UserCommand::validate(User &user, const std::string &args)
 {
+    if (user.isRegistred())
+        throw std::invalid_argument(":localhost 462 * :You are already registred and cannot handshake again\n");
     if (user.password.empty())
         throw std::invalid_argument(":localhost * :No password given\n");
     if (args.empty() || !check_args(args))
@@ -89,7 +93,7 @@ void UserCommand::run(User &user, const std::string &args)
     while (std::getline(ss, token, ' '))
     {
         if (i == 0)
-            user.username = token;
+            user.username = "~" + token;
         if (i == 1)
             // add rule
             if (i == 3)
@@ -113,6 +117,8 @@ void NickCommand::validate(User &user, const std::string &args)
         throw std::invalid_argument(":localhost * :No password given\n");
     if (args.empty())
         throw std::invalid_argument(":localhost 431 * :No nickname given\n");
+    if (user.nickname == args)
+        return;
     if (context->isNickNameRegistred(args))
     {
         std::ostringstream oss;
@@ -121,22 +127,32 @@ void NickCommand::validate(User &user, const std::string &args)
     }
 
     /**
-     * disconnect old connected user with similar nickname if exists
+     * disconnect old guest user with similar nickname if exists
      */
-    if (context->isNickNameConnected(args))
+    if (context->isNickNameGuest(args))
     {
-        context->sendClientMsg(context->findConnectedUsersByNickName(args)->second, "ERROR :Closing Link: 0.0.0.0 (Overridden)\n");
+        User &oldGuest = context->findGuestUserByNickName(args)->second;
+        oldGuest.send("ERROR :Closing Link: 0.0.0.0 (Overridden)\n");
         context->disconnectUser(args);
     }
 }
 
-void NickCommand::run(User &user, const std::string &args)
+void NickCommand::run(User &user, const std::string &newNickname)
 {
     std::cout << "run NickCommand " << std::endl;
-    if (!args.empty())
+
+    if (user.nickname == newNickname)
     {
-        user.nickname = args;
+        return;
     }
+
+    std::ostringstream oss;
+    oss << ":" << user.nickname << "!" << user.username << "@localhost NICK :" << newNickname << '\n';
+
+    user.nickname = newNickname;
+
+    if (context->isNickNameRegistred(newNickname))
+        user.send(oss.str());
 }
 
 /**
@@ -157,4 +173,55 @@ void ListCommand::run(User &user, const std::string &args)
 {
     (void)user;
     (void)args;
+}
+
+/**
+ * JOIN COMMAND
+ */
+JoinCommand::JoinCommand(Context *context)
+    : CmdHandler(context)
+{
+}
+
+void JoinCommand::validate(User &user, const std::string &tag)
+{
+    // TODO: modes
+    (void)user;
+
+    if (tag == "0")
+        return;
+    if (tag.find(',') != std::string::npos)
+    {
+        std::cout << "multiple channels" << std::endl;
+        std::istringstream iss(tag);
+        std::string arg;
+        while (std::getline(iss, arg, ','))
+        {
+            if (arg == "0")
+                user.send(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, arg));
+            else
+            {
+                std::string message = "JOIN " + arg;
+                user.handleSocket(Command::fromMessage(message));
+            }
+        }
+        throw std::invalid_argument("");
+    }
+    else if (tag.length() == 0)
+        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
+    else if (tag[0] != '#')
+        throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, tag));
+}
+
+void JoinCommand::run(User &user, const std::string &tag)
+{
+    std::cout << "running join command -> " << tag << std::endl;
+    if (tag == "0")
+    {
+        context->kickUserFromAllChannels(user);
+    }
+    else
+    {
+        context->joinUserToChannel(user, tag);
+    }
 }

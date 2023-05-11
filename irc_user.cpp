@@ -1,5 +1,8 @@
 #include "irc_user.hpp"
 
+/**
+ * User
+ */
 User::User(Context *context, int sockfd) : context(context), fd(sockfd), nickname(""), username(""){};
 
 User::User(const User &other)
@@ -7,52 +10,60 @@ User::User(const User &other)
     *this = other;
 }
 
-// User &User::operator=(const User &other)
-// {
-//     this->context = other.context;
-//     this->fd = other.fd;
-//     this->nickname = other.nickname;
-//     this->username = other.username;
-//     return *this;
-// }
+bool User::isRegistred()
+{
+    return context->isUserRegistred(*this);
+}
+
+bool User::isGuest()
+{
+    return context->isUserGuest(*this);
+}
+
+void User::send(const std::string &msg)
+{
+    if (msg.length() == 0)
+        return;
+    if (::send(this->fd, msg.c_str(), msg.length(), 0) == -1)
+    {
+        perror("send");
+    }
+}
 
 User::~User() {}
 
-Command User::parseIntoCmd(std::string &message)
+void User::setNickname(const std::string &value)
 {
-    Command cmd;
+    this->nickname = value;
+}
 
-    message = trim(message);
-    message = upperFirstWord(message.c_str());
-    std::istringstream ss(message);
-    size_t npos = message.find_first_of(" \t\n\r\v\f");
-    if (npos == std::string::npos)
-        return (Command){message, ""};
-    cmd.name = message.substr(0, npos);
-    cmd.args = trim(message.substr(npos));
-    return cmd;
+void User::setRealname(const std::string &value)
+{
+    this->realname = value;
+}
+
+void User::setUsername(const std::string &value)
+{
+    this->username = value;
+}
+
+void User::setPassword(const std::string &value)
+{
+    this->password = value;
 }
 
 /**
- * ConnectedUser
+ * GuestUser
  */
-ConnectedUser::ConnectedUser() : User(NULL, -1) {}
-ConnectedUser::ConnectedUser(Context *context, int sockfd) : User(context, sockfd) {}
-ConnectedUser::ConnectedUser(const ConnectedUser &other) : User(other)
+GuestUser::GuestUser() : User(NULL, -1) {}
+GuestUser::GuestUser(Context *context, int sockfd) : User(context, sockfd) {}
+GuestUser::GuestUser(const GuestUser &other) : User(other)
 {
     *this = other;
 }
+GuestUser::~GuestUser() {}
 
-// ConnectedUser &ConnectedUser::operator=(const ConnectedUser &other)
-// {
-//     this->password = other.password;
-//     this->realname = other.realname;
-//     return *this;
-// }
-
-ConnectedUser::~ConnectedUser() {}
-
-void ConnectedUser::handleSocket(const Command &cmd)
+void GuestUser::handleSocket(const Command &cmd)
 {
     CmdHandler *command = context->getCommand(cmd.name);
     if (!command)
@@ -68,7 +79,7 @@ void ConnectedUser::handleSocket(const Command &cmd)
     std::string *it = std::find(std::begin(cmds), std::end(cmds), cmd.name);
     if (it == std::end(cmds))
     {
-        context->sendClientMsg(*this, ":localhost 451 * LIST :You must finish connecting with another nickname first.\n");
+        this->send(":localhost 451 * LIST :You must finish connecting with another nickname first.\n");
     }
     else
     {
@@ -80,12 +91,12 @@ void ConnectedUser::handleSocket(const Command &cmd)
         }
         catch (const std::exception &e)
         {
-            context->sendClientMsg(*this, e.what());
+            this->send(e.what());
         }
     }
 }
 
-void ConnectedUser::onChange()
+void GuestUser::onChange()
 {
     std::cout << "-> socket fd: " << fd << '\n';
     std::cout << "-> nickname: " << nickname << '\n';
@@ -96,7 +107,7 @@ void ConnectedUser::onChange()
 
     std::ostringstream oss;
     oss << ":localhost " << nickname << " :Welcome to the 1337.server.chat Internet Relay Chat Network " << nickname << '\n';
-    context->sendClientMsg(*this, oss.str());
+    this->send(oss.str());
     context->registerUser(*this);
 }
 
@@ -109,16 +120,28 @@ RegistredUser::RegistredUser(const RegistredUser &other) : User(other)
 {
     *this = other;
 }
-// RegistredUser &RegistredUser::operator=(const RegistredUser &other)
-// {
-//     (void)other;
-//     return *this;
-// }
 RegistredUser::~RegistredUser()
 {
 }
 
 void RegistredUser::handleSocket(const Command &cmd)
 {
-    (void)cmd;
+    CmdHandler *command = context->getCommand(cmd.name);
+    if (!command)
+    {
+        std::ostringstream oss;
+        oss << ":localhost 421 " << nickname << " " << cmd.originalName << " :Unknown command\n";
+        this->send(oss.str());
+        return;
+    }
+
+    try
+    {
+        command->validate(*this, cmd.args);
+        command->run(*this, cmd.args);
+    }
+    catch (const std::exception &e)
+    {
+        this->send(e.what());
+    }
 }

@@ -30,21 +30,27 @@ public: // constructors
     // User &operator=(const User &other);
     virtual ~User();
 
+    bool isRegistred();
+    bool isGuest();
+    void send(const std::string &msg);
+
+    void setNickname(const std::string &value);
+    void setRealname(const std::string &value);
+    void setUsername(const std::string &value);
+    void setPassword(const std::string &value);
+
 public:
     virtual void handleSocket(const Command &cmd) = 0;
-
-public: // static
-    static Command parseIntoCmd(std::string &message);
 };
 
-class ConnectedUser : public User
+class GuestUser : public User
 {
 public: // constructors
-    ConnectedUser();
-    ConnectedUser(Context *context, int sockfd);
-    ConnectedUser(const ConnectedUser &other);
-    // ConnectedUser &operator=(const ConnectedUser &other);
-    ~ConnectedUser();
+    GuestUser();
+    GuestUser(Context *context, int sockfd);
+    GuestUser(const GuestUser &other);
+    // GuestUser &operator=(const GuestUser &other);
+    ~GuestUser();
 
 public:
     void handleSocket(const Command &cmd);
