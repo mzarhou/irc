@@ -20,7 +20,7 @@ void PassCommand::validate(User &user, const std::string &args)
     (void)user;
     std::cout << "validate PassCommand " << std::endl;
     if (user.isRegistred())
-        throw std::invalid_argument(":localhost 462 * :You are already connected and cannot handshake again\n");
+        throw std::invalid_argument(":localhost 462 * :You are already registred and cannot handshake again\n");
     else if (args.empty())
         throw std::invalid_argument(":localhost 461 * PASS :Not enough parameters\n");
     else if (args.compare(context->getServerpassw()) != 0)
@@ -77,7 +77,7 @@ int check_args(std::string args)
 void UserCommand::validate(User &user, const std::string &args)
 {
     if (user.isRegistred())
-        throw std::invalid_argument(":localhost 462 * :You are already connected and cannot handshake again\n");
+        throw std::invalid_argument(":localhost 462 * :You are already registred and cannot handshake again\n");
     if (user.password.empty())
         throw std::invalid_argument(":localhost * :No password given\n");
     if (args.empty() || !check_args(args))
@@ -127,11 +127,11 @@ void NickCommand::validate(User &user, const std::string &args)
     }
 
     /**
-     * disconnect old connected user with similar nickname if exists
+     * disconnect old guest user with similar nickname if exists
      */
-    if (context->isNickNameConnected(args))
+    if (context->isNickNameGuest(args))
     {
-        context->sendClientMsg(context->findConnectedUsersByNickName(args)->second, "ERROR :Closing Link: 0.0.0.0 (Overridden)\n");
+        context->sendClientMsg(context->findGuestUsersByNickName(args)->second, "ERROR :Closing Link: 0.0.0.0 (Overridden)\n");
         context->disconnectUser(args);
     }
 }

@@ -5,7 +5,7 @@
 #include <map>
 
 class User;
-class ConnectedUser;
+class GuestUser;
 class RegistredUser;
 class CmdHandler;
 class Channel;
@@ -14,7 +14,7 @@ class Channel;
 #include "irc_user.hpp"
 #include "channel.hpp"
 
-typedef std::map<int, ConnectedUser> CONNECTED_USERS_MAP;
+typedef std::map<int, GuestUser> GUEST_USERS_MAP;
 typedef std::map<int, RegistredUser> REGISTRED_USERS_MAP;
 typedef std::map<std::string, CmdHandler *> COMMANDS_MAP;
 typedef std::map<std::string, Channel> CHANNELS_MAP;
@@ -23,7 +23,7 @@ class Context
 {
 private:
     const std::string serverpassw;
-    CONNECTED_USERS_MAP connected_users;
+    GUEST_USERS_MAP guest_users;
     REGISTRED_USERS_MAP registred_users;
     COMMANDS_MAP commands;
     CHANNELS_MAP channels;
@@ -40,14 +40,14 @@ public:
 
     void addNewUser(int sockfd);
     REGISTRED_USERS_MAP::iterator findRegistredUserByNickname(const std::string &nickname);
-    CONNECTED_USERS_MAP::iterator findConnectedUsersByNickName(const std::string &nickname);
+    GUEST_USERS_MAP::iterator findGuestUsersByNickName(const std::string &nickname);
     bool isNickNameRegistred(const std::string &nickname);
     bool isUserRegistred(const User &user);
-    bool isUserConnected(const User &user);
-    bool isNickNameConnected(const std::string &nickname);
+    bool isUserGuest(const User &user);
+    bool isNickNameGuest(const std::string &nickname);
     void disconnectUser(int fd);
     void disconnectUser(const std::string &nickname);
-    void registerUser(ConnectedUser &user);
+    void registerUser(GuestUser &user);
 
     User *getSocketHandler(int sockfd);
     std::string getServerpassw(void);

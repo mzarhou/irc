@@ -29,8 +29,8 @@ void Context::registerCommand(const std::string &name, CmdHandler *handler)
 
 void Context::addNewUser(int sockfd)
 {
-    ConnectedUser new_user(this, sockfd);
-    connected_users[sockfd] = new_user;
+    GuestUser new_user(this, sockfd);
+    guest_users[sockfd] = new_user;
 }
 
 CmdHandler *Context::getCommand(const std::string &name)
@@ -44,10 +44,10 @@ CmdHandler *Context::getCommand(const std::string &name)
 
 User *Context::getSocketHandler(int sockfd)
 {
-    CONNECTED_USERS_MAP::iterator connected_pos = connected_users.find(sockfd);
-    if (connected_pos != connected_users.end())
+    GUEST_USERS_MAP::iterator guest_pos = guest_users.find(sockfd);
+    if (guest_pos != guest_users.end())
     {
-        return &connected_pos->second;
+        return &guest_pos->second;
     }
     REGISTRED_USERS_MAP::iterator registred_pos = registred_users.find(sockfd);
     if (registred_pos != registred_users.end())
@@ -70,10 +70,10 @@ REGISTRED_USERS_MAP::iterator Context::findRegistredUserByNickname(const std::st
     return it;
 }
 
-CONNECTED_USERS_MAP::iterator Context::findConnectedUsersByNickName(const std::string &nickname)
+GUEST_USERS_MAP::iterator Context::findGuestUsersByNickName(const std::string &nickname)
 {
-    CONNECTED_USERS_MAP::iterator it = connected_users.begin();
-    for (; it != connected_users.end(); it++)
+    GUEST_USERS_MAP::iterator it = guest_users.begin();
+    for (; it != guest_users.end(); it++)
     {
         if (it->second.nickname == nickname)
             return it;
@@ -86,10 +86,10 @@ bool Context::isNickNameRegistred(const std::string &nickname)
     REGISTRED_USERS_MAP::const_iterator it = findRegistredUserByNickname(nickname);
     return (it != registred_users.end());
 }
-bool Context::isNickNameConnected(const std::string &nickname)
+bool Context::isNickNameGuest(const std::string &nickname)
 {
-    CONNECTED_USERS_MAP::iterator it = findConnectedUsersByNickName(nickname);
-    return (it != connected_users.end());
+    GUEST_USERS_MAP::iterator it = findGuestUsersByNickName(nickname);
+    return (it != guest_users.end());
 }
 
 bool Context::isUserRegistred(const User &user)
@@ -98,15 +98,15 @@ bool Context::isUserRegistred(const User &user)
     return (it != registred_users.end());
 }
 
-bool Context::isUserConnected(const User &user)
+bool Context::isUserGuest(const User &user)
 {
-    CONNECTED_USERS_MAP::const_iterator it = connected_users.find(user.fd);
-    return (it != connected_users.end());
+    GUEST_USERS_MAP::const_iterator it = guest_users.find(user.fd);
+    return (it != guest_users.end());
 }
 
 void Context::disconnectUser(int fd)
 {
-    connected_users.erase(fd);
+    guest_users.erase(fd);
 
     REGISTRED_USERS_MAP::iterator registred_pos = registred_users.find(fd);
     if (registred_pos != registred_users.end())
@@ -118,10 +118,10 @@ void Context::disconnectUser(int fd)
 
 void Context::disconnectUser(const std::string &nickname)
 {
-    CONNECTED_USERS_MAP::iterator connected_user_it = findConnectedUsersByNickName(nickname);
-    if (connected_user_it != connected_users.end())
+    GUEST_USERS_MAP::iterator guest_user_it = findGuestUsersByNickName(nickname);
+    if (guest_user_it != guest_users.end())
     {
-        disconnectUser(connected_user_it->second.fd);
+        disconnectUser(guest_user_it->second.fd);
     }
     else
     {
@@ -133,10 +133,10 @@ void Context::disconnectUser(const std::string &nickname)
     }
 }
 
-void Context::registerUser(ConnectedUser &user)
+void Context::registerUser(GuestUser &user)
 {
     std::cout << "registring new user " << user.nickname << std::endl;
-    connected_users.erase(user.fd);
+    guest_users.erase(user.fd);
 
     RegistredUser ruser(this, user.fd);
     ruser.setNickname(user.nickname);

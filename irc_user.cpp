@@ -15,9 +15,9 @@ bool User::isRegistred()
     return context->isUserRegistred(*this);
 }
 
-bool User::isConnected()
+bool User::isGuest()
 {
-    return context->isUserConnected(*this);
+    return context->isUserGuest(*this);
 }
 
 User::~User() {}
@@ -60,17 +60,17 @@ Command User::parseIntoCmd(std::string &message)
 }
 
 /**
- * ConnectedUser
+ * GuestUser
  */
-ConnectedUser::ConnectedUser() : User(NULL, -1) {}
-ConnectedUser::ConnectedUser(Context *context, int sockfd) : User(context, sockfd) {}
-ConnectedUser::ConnectedUser(const ConnectedUser &other) : User(other)
+GuestUser::GuestUser() : User(NULL, -1) {}
+GuestUser::GuestUser(Context *context, int sockfd) : User(context, sockfd) {}
+GuestUser::GuestUser(const GuestUser &other) : User(other)
 {
     *this = other;
 }
-ConnectedUser::~ConnectedUser() {}
+GuestUser::~GuestUser() {}
 
-void ConnectedUser::handleSocket(const Command &cmd)
+void GuestUser::handleSocket(const Command &cmd)
 {
     CmdHandler *command = context->getCommand(cmd.name);
     if (!command)
@@ -103,7 +103,7 @@ void ConnectedUser::handleSocket(const Command &cmd)
     }
 }
 
-void ConnectedUser::onChange()
+void GuestUser::onChange()
 {
     std::cout << "-> socket fd: " << fd << '\n';
     std::cout << "-> nickname: " << nickname << '\n';
