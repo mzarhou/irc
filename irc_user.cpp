@@ -30,6 +30,14 @@ void User::send(const std::string &msg)
     }
 }
 
+bool User::isJoinedChannel(const std::string &channelTag)
+{
+    Channel *ch = context->getChannel(channelTag);
+    if (!ch)
+        return false;
+    return ch->hasUser(*this);
+}
+
 std::string User::getMsgPrefix()
 {
     std::ostringstream oss;

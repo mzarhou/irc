@@ -25,6 +25,8 @@ public:
     std::string getTag();
     bool hasUser(User &user);
     void kickUser(User &user);
+
+    void broadcast(const std::string &message);
 };
 
 #endif

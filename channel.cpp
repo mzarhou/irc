@@ -41,3 +41,13 @@ void Channel::kickUser(User &user)
 {
     users.erase(user.fd);
 }
+
+/**
+ * send message all users in the channel
+ */
+void Channel::broadcast(const std::string &message)
+{
+    REGISTRED_USERS_MAP::iterator it = users.begin();
+    for (; it != users.end(); it++)
+        it->second.send(message);
+}

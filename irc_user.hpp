@@ -33,6 +33,7 @@ public: // constructors
     bool isRegistred();
     bool isGuest();
     void send(const std::string &msg);
+    bool isJoinedChannel(const std::string &channelTag);
     std::string getMsgPrefix();
 
     void setNickname(const std::string &value);
