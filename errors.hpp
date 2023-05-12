@@ -12,6 +12,7 @@
 #define ERR_BADCHANNELKEY 475
 #define ERR_BADCHANMASK 476
 
+
 #include <string>
 #include <sstream>
 
@@ -27,6 +28,18 @@ struct Error
     {
         std::ostringstream oss;
         oss << ":" << serverHost << " 403 " << nickname << " " << channel << " :No such channel\n";
+        return oss.str();
+    }
+    static std::string ERR_NOSUCHNICK(const std::string &serverHost, const std::string &client, const std::string &nickname)
+    {
+        std::ostringstream oss;
+        oss << ":" << serverHost << " 401 " << client << " " << nickname << " :No such nick/channel\n";
+        return oss.str();
+    }
+    static std::string ERR_NOSUCHSERVER(const std::string &serverHost, const std::string &server_name, const std::string &nickname)
+    {
+        std::ostringstream oss;
+        oss << ":" << serverHost << " 402 " << server_name << " " << nickname << " :No such server\n";
         return oss.str();
     }
 };

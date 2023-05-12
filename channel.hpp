@@ -27,6 +27,7 @@ public:
     void kickUser(User &user);
 
     void broadcast(const std::string &message);
+    void broadcast_msg(User &user,const std::string &message);
 };
 
 #endif

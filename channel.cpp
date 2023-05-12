@@ -51,3 +51,13 @@ void Channel::broadcast(const std::string &message)
     for (; it != users.end(); it++)
         it->second.send(message);
 }
+
+void Channel::broadcast_msg(User &user, const std::string &message)
+{
+    REGISTRED_USERS_MAP::iterator it = users.begin();
+    for (; it != users.end(); it++)
+    {
+        if (it->second.nickname != user.nickname)
+            it->second.send(message);
+    }
+}

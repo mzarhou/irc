@@ -96,4 +96,11 @@ public:
     void run(User &user, const std::string &args);
 };
 
+class PrivMsgCommand : public CmdHandler
+{
+public:
+    PrivMsgCommand(Context *context);
+    void validate(User &user, const std::string &args);
+    void run(User &user, const std::string &args);
+};
 #endif

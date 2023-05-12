@@ -267,3 +267,76 @@ void PartCommand::run(User &user, const std::string &args)
         user.send(oss.str());
     }
 }
+
+/**
+ * PRIVMSG COMMAND
+ */
+PrivMsgCommand::PrivMsgCommand(Context *context)
+    : CmdHandler(context)
+{
+}
+
+void PrivMsgCommand::validate(User &user, const std::string &args)
+{
+    std::istringstream ss(args);
+    std::string token;
+    int i = 0;
+    while(std::getline(ss, token, ' '))
+    {
+        if (i == 0)
+        {
+            // if (token.substr(0,1) != std::string::npos)
+            if (token.substr(0, 1) == "#")
+            {
+                if (!context->isChannelExist(token))
+                    throw std::invalid_argument(Error::ERR_NOSUCHNICK("localhost", token, user.nickname));
+                std::cout << "SEND PRIVMSG TO CHANNEL" << std::endl;
+
+            }
+            else if(!context->isNickNameRegistred(token))
+                throw std::invalid_argument(Error::ERR_NOSUCHNICK("localhost", token, user.nickname));
+        }
+        i++;
+    }
+
+    
+}
+
+void PrivMsgCommand::run(User &user, const std::string &args)
+{
+    std::istringstream ss(args);
+    std::string token, channel;
+    Channel *ch;
+    int isChannel = 0;
+    int i = 0;
+    while(std::getline(ss, token, ' '))
+    {
+        REGISTRED_USERS_MAP::iterator it;
+        if (i == 0)
+        {
+            if (token.substr(0, 1) == "#")
+            {
+                isChannel = 1;
+                channel = token;
+                ch = context->getChannel(token);
+            }
+            else
+                it = context->findRegistredUserByNickname(token);           
+        }
+        else if (i == 1)
+        {
+            std::ostringstream oss;
+            if (isChannel == 1)
+            {
+                oss << user.nickname << it->second.getMsgPrefix() << " PRIVMSG " << channel << " :" <<token << '\n';
+                ch->broadcast_msg(user ,oss.str());
+            }
+            else
+            {
+                oss << it->second.getMsgPrefix() << " PRIVMSG " << user.nickname << " :" <<token << '\n';
+                it->second.send(oss.str());
+            }
+        }
+        i++;
+    }
+}
