@@ -223,5 +223,40 @@ void JoinCommand::run(User &user, const std::string &tag)
     else
     {
         context->joinUserToChannel(user, tag);
+        std::ostringstream oss;
+        oss << user.getMsgPrefix() << " JOIN :" << tag << std::endl
+            << ":localhost 353 " << user.nickname << " = " << tag << " :@" << user.nickname << std::endl
+            << ":localhost 366 " << user.nickname << " :End of /NAMES list." << std::endl;
+
+        user.send(oss.str());
+    }
+}
+
+/**
+ * PART COMMAND
+ */
+PartCommand::PartCommand(Context *context)
+    : CmdHandler(context)
+{
+}
+
+void PartCommand::validate(User &user, const std::string &args)
+{
+    (void)user;
+    if (args.empty())
+        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
+    else if (!context->isChannelExist(args))
+        throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, args));
+}
+
+void PartCommand::run(User &user, const std::string &args)
+{
+    Channel *ch = context->getChannel(args);
+    if (ch)
+    {
+        ch->kickUser(user);
+        std::ostringstream oss;
+        oss << user.getMsgPrefix() << " PART " << ch->getTag() << '\n';
+        user.send(oss.str());
     }
 }

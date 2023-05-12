@@ -9,6 +9,7 @@ Context::Context(const std::string passw) : serverpassw(passw)
     this->registerCommand("PASS", new PassCommand(this));
     this->registerCommand("LIST", new ListCommand(this));
     this->registerCommand("JOIN", new JoinCommand(this));
+    this->registerCommand("PART", new PartCommand(this));
 }
 
 Context::~Context()
@@ -190,4 +191,18 @@ void Context::kickUserFromAllChannels(User &user)
         std::string message = "PART " + ch.getTag();
         user.handleSocket(Command::fromMessage(message));
     }
+}
+
+bool Context::isChannelExist(const std::string &tag)
+{
+    CHANNELS_MAP::iterator it = channels.find(tag);
+    return (it != channels.end());
+}
+
+Channel *Context::getChannel(const std::string &tag)
+{
+    CHANNELS_MAP::iterator it = channels.find(tag);
+    if (it != channels.end())
+        return (&it->second);
+    return (NULL);
 }

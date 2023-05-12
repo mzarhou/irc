@@ -30,6 +30,13 @@ void User::send(const std::string &msg)
     }
 }
 
+std::string User::getMsgPrefix()
+{
+    std::ostringstream oss;
+    oss << ":" << nickname << "!" << username << "@localhost";
+    return oss.str();
+}
+
 User::~User() {}
 
 void User::setNickname(const std::string &value)
