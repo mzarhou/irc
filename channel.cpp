@@ -31,7 +31,7 @@ void Channel::addNewUser(RegistredUser &user)
     users[user.fd] = user;
 }
 
-bool Channel::hasUser(User &user)
+bool Channel::hasUser(const User &user)
 {
     REGISTRED_USERS_MAP::iterator it = users.find(user.fd);
     return (it != users.end());
@@ -50,4 +50,19 @@ void Channel::broadcast(const std::string &message)
     REGISTRED_USERS_MAP::iterator it = users.begin();
     for (; it != users.end(); it++)
         it->second.send(message);
+}
+
+/**
+ * send message all users in the channel
+ * excluding current authenticated user
+ */
+void Channel::emit(const User &userToExclude, const std::string &message)
+{
+    REGISTRED_USERS_MAP::iterator it = users.begin();
+    for (; it != users.end(); it++)
+    {
+        if (it->second.fd == userToExclude.fd)
+            continue;
+        it->second.send(message);
+    }
 }

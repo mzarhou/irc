@@ -7,6 +7,7 @@
 #include "str-utils.hpp"
 
 class Context;
+class Channel;
 struct Command;
 
 #include "command.hpp"
@@ -34,6 +35,7 @@ public: // constructors
     bool isGuest();
     void send(const std::string &msg);
     bool isJoinedChannel(const std::string &channelTag);
+    std::vector<Channel *> channels();
     std::string getMsgPrefix();
 
     void setNickname(const std::string &value);

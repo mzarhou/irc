@@ -180,17 +180,17 @@ void Context::joinUserToChannel(User &user, const std::string &tag)
     ch.addNewUser(it->second);
 }
 
-void Context::kickUserFromAllChannels(User &user)
+std::vector<Channel *> Context::getUserChannels(const User &user)
 {
+    std::vector<Channel *> userChannels;
+
     CHANNELS_MAP::iterator it = channels.begin();
     for (; it != channels.end(); it++)
     {
-        Channel &ch = it->second;
-        if (!ch.hasUser(user))
-            continue;
-        std::string message = "PART " + ch.getTag();
-        user.handleSocket(Command::fromMessage(message));
+        if (it->second.hasUser(user))
+            userChannels.push_back(&it->second);
     }
+    return userChannels;
 }
 
 bool Context::isChannelExist(const std::string &tag)
