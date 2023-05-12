@@ -222,12 +222,19 @@ void JoinCommand::run(User &user, const std::string &tag)
     }
     else
     {
-        context->joinUserToChannel(user, tag);
-        std::ostringstream oss;
-        oss << user.getMsgPrefix() << " JOIN :" << tag << std::endl
-            << ":localhost 353 " << user.nickname << " = " << tag << " :@" << user.nickname << std::endl
-            << ":localhost 366 " << user.nickname << " :End of /NAMES list." << std::endl;
+        if (user.isJoinedChannel(tag))
+            return;
 
+        context->joinUserToChannel(user, tag);
+
+        std::ostringstream oss;
+        oss << user.getMsgPrefix() << " JOIN :" << tag << std::endl;
+        context->getChannel(tag)->broadcast(oss.str());
+
+        oss.str("");
+        oss.clear();
+        oss << ":localhost 353 " << user.nickname << " = " << tag << " :@" << user.nickname << std::endl
+            << ":localhost 366 " << user.nickname << " :End of /NAMES list." << std::endl;
         user.send(oss.str());
     }
 }
