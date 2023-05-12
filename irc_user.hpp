@@ -33,6 +33,7 @@ public: // constructors
     bool isRegistred();
     bool isGuest();
     void send(const std::string &msg);
+    std::string getMsgPrefix();
 
     void setNickname(const std::string &value);
     void setRealname(const std::string &value);

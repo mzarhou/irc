@@ -55,6 +55,8 @@ public:
     Channel &createNewChannel(const std::string &tag);
     void joinUserToChannel(User &user, const std::string &tag);
     void kickUserFromAllChannels(User &user);
+    bool isChannelExist(const std::string &tag);
+    Channel *getChannel(const std::string &tag);
 };
 
 #endif
