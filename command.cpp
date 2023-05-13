@@ -151,7 +151,7 @@ void NickCommand::run(User &user, const std::string &newNickname)
         std::vector<Channel *> channels = user.channels();
         std::vector<Channel *>::iterator ch_it = channels.begin();
         for (; ch_it != channels.end(); ch_it++)
-            (*ch_it)->emit(user, oss.str());
+            // (*ch_it)->emit(user, oss.str());
         user.send(oss.str());
     }
 }
@@ -312,12 +312,15 @@ void PrivMsgCommand::run(User &user, const std::string &args)
 {
     std::istringstream ss(args);
     std::string token, channel;
+    std::size_t p;
     Channel *ch;
     int isChannel = 0;
+    int colon = 0;
     int i = 0;
     while(std::getline(ss, token, ' '))
     {
         REGISTRED_USERS_MAP::iterator it;
+        std::ostringstream oss;
         if (i == 0)
         {
             if (token.substr(0, 1) == "#")
@@ -331,15 +334,29 @@ void PrivMsgCommand::run(User &user, const std::string &args)
         }
         else if (i == 1)
         {
-            std::ostringstream oss;
-            if (isChannel == 1)
+            if (token.substr(0, 1) == ":")
             {
-                oss << user.nickname << it->second.getMsgPrefix() << " PRIVMSG " << channel << " :" <<token << '\n';
+                colon = 1;
+                p = args.find_first_of(":");
+            }
+            if (isChannel == 1 && !colon)
+            {
+                oss << ":" << user.nickname << "!" << user.username << "@localhost" << " PRIVMSG " << channel << " :" << token << '\n';
                 ch->emit(user ,oss.str());
+            }
+            if (isChannel == 1 && colon)
+            {
+                oss << ":" << user.nickname << "!" << user.username << "@localhost" << " PRIVMSG " << channel << " :" << args.substr(p+1) << '\n';
+                ch->emit(user ,oss.str());
+            }
+            else if(!colon)
+            {
+                oss << it->second.getMsgPrefix() << " PRIVMSG " << user.nickname << " :" <<token << '\n';
+                it->second.send(oss.str());
             }
             else
             {
-                oss << it->second.getMsgPrefix() << " PRIVMSG " << user.nickname << " :" <<token << '\n';
+                oss << it->second.getMsgPrefix() << " PRIVMSG " << user.nickname << " :" << args.substr(p+1) << '\n';
                 it->second.send(oss.str());
             }
         }

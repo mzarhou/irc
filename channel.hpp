@@ -28,6 +28,7 @@ public:
 
     void broadcast(const std::string &message);
     void emit(const User &userToExclude, const std::string &message);
+    // void broadcast_msg(User &user, const std::string &message);
 };
 
 #endif
