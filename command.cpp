@@ -118,7 +118,7 @@ void NickCommand::validate(User &user, const std::string &args)
     if (args.empty())
         throw std::invalid_argument(":localhost 431 * :No nickname given\n");
     if (user.nickname == args)
-        return;
+        throw std::invalid_argument("");
     if (context->isNickNameRegistred(args))
     {
         std::ostringstream oss;
@@ -141,18 +141,19 @@ void NickCommand::run(User &user, const std::string &newNickname)
 {
     std::cout << "run NickCommand " << std::endl;
 
-    if (user.nickname == newNickname)
-    {
-        return;
-    }
-
     std::ostringstream oss;
     oss << ":" << user.nickname << "!" << user.username << "@localhost NICK :" << newNickname << '\n';
 
     user.nickname = newNickname;
 
     if (context->isNickNameRegistred(newNickname))
+    {
+        std::vector<Channel *> channels = user.channels();
+        std::vector<Channel *>::iterator ch_it = channels.begin();
+        for (; ch_it != channels.end(); ch_it++)
+            (*ch_it)->emit(user, oss.str());
         user.send(oss.str());
+    }
 }
 
 /**
@@ -211,6 +212,8 @@ void JoinCommand::validate(User &user, const std::string &tag)
         throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
     else if (tag[0] != '#')
         throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, tag));
+    if (user.isJoinedChannel(tag))
+        throw std::invalid_argument("");
 }
 
 void JoinCommand::run(User &user, const std::string &tag)
@@ -218,13 +221,16 @@ void JoinCommand::run(User &user, const std::string &tag)
     std::cout << "running join command -> " << tag << std::endl;
     if (tag == "0")
     {
-        context->kickUserFromAllChannels(user);
+        std::vector<Channel *> channels = user.channels();
+        std::vector<Channel *>::iterator ch_it = channels.begin();
+        for (; ch_it != channels.end() && (*ch_it); ch_it++)
+        {
+            std::string message = "PART " + (*ch_it)->getTag();
+            user.handleSocket(Command::fromMessage(message));
+        }
     }
     else
     {
-        if (user.isJoinedChannel(tag))
-            return;
-
         context->joinUserToChannel(user, tag);
 
         std::ostringstream oss;
@@ -329,7 +335,7 @@ void PrivMsgCommand::run(User &user, const std::string &args)
             if (isChannel == 1)
             {
                 oss << user.nickname << it->second.getMsgPrefix() << " PRIVMSG " << channel << " :" <<token << '\n';
-                ch->broadcast_msg(user ,oss.str());
+                ch->emit(user ,oss.str());
             }
             else
             {

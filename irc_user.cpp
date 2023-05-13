@@ -38,6 +38,11 @@ bool User::isJoinedChannel(const std::string &channelTag)
     return ch->hasUser(*this);
 }
 
+std::vector<Channel *> User::channels()
+{
+    return context->getUserChannels(*this);
+}
+
 std::string User::getMsgPrefix()
 {
     std::ostringstream oss;

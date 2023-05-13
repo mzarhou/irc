@@ -23,11 +23,11 @@ public:
 
     void addNewUser(RegistredUser &user);
     std::string getTag();
-    bool hasUser(User &user);
+    bool hasUser(const User &user);
     void kickUser(User &user);
 
     void broadcast(const std::string &message);
-    void broadcast_msg(User &user,const std::string &message);
+    void emit(const User &userToExclude, const std::string &message);
 };
 
 #endif
