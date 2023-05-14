@@ -10,6 +10,7 @@ Context::Context(const std::string passw) : serverpassw(passw)
     this->registerCommand("LIST", new ListCommand(this));
     this->registerCommand("JOIN", new JoinCommand(this));
     this->registerCommand("PART", new PartCommand(this));
+    this->registerCommand("PRIVMSG", new PrivMsgCommand(this));
 }
 
 Context::~Context()
@@ -58,39 +59,38 @@ User *Context::getSocketHandler(int sockfd)
     throw std::invalid_argument("invalid socket file descriptor");
 }
 
-REGISTRED_USERS_MAP::iterator Context::findRegistredUserByNickname(const std::string &nickname)
+RegistredUser *Context::findRegistredUserByNickname(const std::string &nickname)
 {
     REGISTRED_USERS_MAP::iterator it = registred_users.begin();
     for (; it != registred_users.end(); it++)
     {
         if (it->second.nickname == nickname)
-        {
-            return it;
-        }
+            return &it->second;
     }
-    return it;
+    return nullptr;
 }
 
-GUEST_USERS_MAP::iterator Context::findGuestUserByNickName(const std::string &nickname)
+GuestUser *Context::findGuestUserByNickName(const std::string &nickname)
 {
     GUEST_USERS_MAP::iterator it = guest_users.begin();
     for (; it != guest_users.end(); it++)
     {
         if (it->second.nickname == nickname)
-            return it;
+            return &it->second;
     }
-    return it;
+    return nullptr;
 }
 
 bool Context::isNickNameRegistred(const std::string &nickname)
 {
-    REGISTRED_USERS_MAP::const_iterator it = findRegistredUserByNickname(nickname);
-    return (it != registred_users.end());
+    RegistredUser *user = findRegistredUserByNickname(nickname);
+    return (user != nullptr);
 }
+
 bool Context::isNickNameGuest(const std::string &nickname)
 {
-    GUEST_USERS_MAP::iterator it = findGuestUserByNickName(nickname);
-    return (it != guest_users.end());
+    GuestUser *user = findGuestUserByNickName(nickname);
+    return (user != nullptr);
 }
 
 bool Context::isUserRegistred(const User &user)
@@ -125,16 +125,18 @@ void Context::disconnectUser(int fd)
 
 void Context::disconnectUser(const std::string &nickname)
 {
-    GUEST_USERS_MAP::iterator guest_user_it = findGuestUserByNickName(nickname);
-    if (guest_user_it != guest_users.end())
+    GuestUser *guest_user = findGuestUserByNickName(nickname);
+    if (guest_user)
     {
-        return disconnectUser(guest_user_it->second.fd);
+        disconnectUser(guest_user->fd);
     }
-
-    REGISTRED_USERS_MAP::const_iterator registred_user_it = findRegistredUserByNickname(nickname);
-    if (registred_user_it != registred_users.end())
+    else
     {
-        disconnectUser(registred_user_it->second.fd);
+        RegistredUser *registred_user_it = findRegistredUserByNickname(nickname);
+        if (registred_user_it)
+        {
+            disconnectUser(registred_user_it->fd);
+        }
     }
 }
 

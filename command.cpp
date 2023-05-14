@@ -131,8 +131,8 @@ void NickCommand::validate(User &user, const std::string &args)
      */
     if (context->isNickNameGuest(args))
     {
-        User &oldGuest = context->findGuestUserByNickName(args)->second;
-        oldGuest.send("ERROR :Closing Link: 0.0.0.0 (Overridden)\n");
+        User *oldGuest = context->findGuestUserByNickName(args);
+        oldGuest->send("ERROR :Closing Link: 0.0.0.0 (Overridden)\n");
         context->disconnectUser(args);
     }
 }
@@ -151,8 +151,8 @@ void NickCommand::run(User &user, const std::string &newNickname)
         std::vector<Channel *> channels = user.channels();
         std::vector<Channel *>::iterator ch_it = channels.begin();
         for (; ch_it != channels.end(); ch_it++)
-            (*ch_it)->emit(user, oss.str());
-        user.send(oss.str());
+            // (*ch_it)->emit(user, oss.str());
+            user.send(oss.str());
     }
 }
 
@@ -271,5 +271,56 @@ void PartCommand::run(User &user, const std::string &args)
         std::ostringstream oss;
         oss << user.getMsgPrefix() << " PART " << ch->getTag() << '\n';
         user.send(oss.str());
+    }
+}
+
+/**
+ * PRIVMSG COMMAND
+ */
+PrivMsgCommand::PrivMsgCommand(Context *context)
+    : CmdHandler(context)
+{
+}
+
+void PrivMsgCommand::validate(User &user, const std::string &args)
+{
+    std::pair<std::string, std::string> p = split(args, ' ');
+    if (p.first.empty())
+        throw std::invalid_argument(Error::ERR_NORECIPIENT("localhost", user.nickname));
+    if (p.second.empty())
+        throw std::invalid_argument(Error::ERR_NOTEXTTOSEND("localhost", user.nickname));
+    if (p.first[0] == '#' && !context->isChannelExist(p.first))
+        throw std::invalid_argument(Error::ERR_NOSUCHNICK("localhost", user.nickname, p.first));
+    if (p.first[0] != '#' && !context->isNickNameRegistred(p.first))
+        throw std::invalid_argument(Error::ERR_NOSUCHNICK("localhost", user.nickname, p.first));
+}
+
+void PrivMsgCommand::run(User &user, const std::string &args)
+{
+    std::pair<std::string, std::string> p = split(args, ' ');
+
+    /**
+     * if message start with `:` -> take all the words after `:`
+     * else take first word only
+     */
+    std::string message = ":" + (p.second[0] == ':' ? p.second.substr(1) : getFirstWord(p.second.c_str()));
+
+    std::ostringstream oss;
+    std::string channelTagOrNickname = p.first;
+    oss << user.getMsgPrefix() << " PRIVMSG " << channelTagOrNickname << " " << message << std::endl;
+    message = oss.str();
+
+    if (p.first[0] == '#')
+    {
+        // sending to channel
+        Channel *ch = context->getChannel(channelTagOrNickname);
+        if (ch)
+            ch->emit(user, message);
+    }
+    else
+    {
+        // sending to a specific client
+        User *targetUser = context->findRegistredUserByNickname(channelTagOrNickname);
+        targetUser->send(message);
     }
 }

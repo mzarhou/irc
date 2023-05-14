@@ -69,7 +69,6 @@ public:
     RegistredUser();
     RegistredUser(Context *context, int sockfd);
     RegistredUser(const RegistredUser &other);
-    // RegistredUser &operator=(const RegistredUser &other);
     ~RegistredUser();
 
     void handleSocket(const Command &cmd);
