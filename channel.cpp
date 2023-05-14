@@ -28,7 +28,10 @@ Channel &Channel::operator=(const Channel &other)
 
 void Channel::addNewUser(RegistredUser &user)
 {
+    if (this->empty())
+        operators[user.fd] = user;
     users[user.fd] = user;
+    std::cout << "channel " << tag << ": " << users.size() << std::endl;
 }
 
 bool Channel::hasUser(const User &user)
@@ -37,9 +40,13 @@ bool Channel::hasUser(const User &user)
     return (it != users.end());
 }
 
-void Channel::kickUser(User &user)
+void Channel::kickUser(const User &user)
 {
     users.erase(user.fd);
+    operators.erase(user.fd);
+    if (this->empty())
+        context->deleteChannel(*this);
+    std::cout << "channel " << tag << ": " << users.size() << std::endl;
 }
 
 /**
@@ -65,4 +72,9 @@ void Channel::emit(const User &userToExclude, const std::string &message)
             continue;
         it->second.send(message);
     }
+}
+
+bool Channel::empty()
+{
+    return (users.begin() == users.end());
 }
