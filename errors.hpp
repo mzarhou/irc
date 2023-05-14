@@ -36,6 +36,31 @@ struct Error
         oss << ":" << serverHost << " 482 " << nickname << " " << channel << " :You're not a channel operator\n";
         return oss.str();
     }
+
+    static std::string ERR_NOSUCHNICK(const std::string &serverHost, const std::string &nickname, const std::string &channelOrNickname)
+    {
+        std::ostringstream oss;
+        oss << ":" << serverHost << " 401 " << nickname << " " << channelOrNickname << " :No such nick/channel\n";
+        return oss.str();
+    }
+    static std::string ERR_NOSUCHSERVER(const std::string &serverHost, const std::string &server_name, const std::string &nickname)
+    {
+        std::ostringstream oss;
+        oss << ":" << serverHost << " 402 " << server_name << " " << nickname << " :No such server\n";
+        return oss.str();
+    }
+    static std::string ERR_NORECIPIENT(const std::string &serverHost, const std::string &nickname)
+    {
+        std::ostringstream oss;
+        oss << ":" << serverHost << " 411 " << nickname << " :No recipient given (PRIVMSG)\n";
+        return oss.str();
+    }
+    static std::string ERR_NOTEXTTOSEND(const std::string &serverHost, const std::string &nickname)
+    {
+        std::ostringstream oss;
+        oss << ":" << serverHost << " 412 " << nickname << " :No text to send\n";
+        return oss.str();
+    }
 };
 
 #endif

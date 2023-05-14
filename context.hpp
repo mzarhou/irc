@@ -40,8 +40,8 @@ public:
     CmdHandler *getCommand(const std::string &name);
 
     void addNewUser(int sockfd);
-    REGISTRED_USERS_MAP::iterator findRegistredUserByNickname(const std::string &nickname);
-    GUEST_USERS_MAP::iterator findGuestUserByNickName(const std::string &nickname);
+    RegistredUser *findRegistredUserByNickname(const std::string &nickname);
+    GuestUser *findGuestUserByNickName(const std::string &nickname);
     bool isNickNameRegistred(const std::string &nickname);
     bool isUserRegistred(const User &user);
     bool isUserGuest(const User &user);
