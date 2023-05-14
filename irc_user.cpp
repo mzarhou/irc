@@ -20,7 +20,7 @@ bool User::isGuest()
     return context->isUserGuest(*this);
 }
 
-void User::send(const std::string &msg)
+void User::send(const std::string &msg) const
 {
     if (msg.length() == 0)
         return;
@@ -43,7 +43,7 @@ std::vector<Channel *> User::channels()
     return context->getUserChannels(*this);
 }
 
-std::string User::getMsgPrefix()
+std::string User::getMsgPrefix() const
 {
     std::ostringstream oss;
     oss << ":" << nickname << "!" << username << "@localhost";
