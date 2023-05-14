@@ -96,4 +96,12 @@ public:
     void run(User &user, const std::string &args);
 };
 
+class ModeCommand : public CmdHandler
+{
+public:
+    ModeCommand(Context *context);
+    void validate(User &user, const std::string &args);
+    void run(User &user, const std::string &args);
+};
+
 #endif

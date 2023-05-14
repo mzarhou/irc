@@ -255,7 +255,6 @@ PartCommand::PartCommand(Context *context)
 
 void PartCommand::validate(User &user, const std::string &args)
 {
-    (void)user;
     if (args.empty())
         throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
     else if (!context->isChannelExist(args))
@@ -272,4 +271,35 @@ void PartCommand::run(User &user, const std::string &args)
         oss << user.getMsgPrefix() << " PART " << ch->getTag() << '\n';
         user.send(oss.str());
     }
+}
+
+/**
+ * PART COMMAND
+ */
+ModeCommand::ModeCommand(Context *context)
+    : CmdHandler(context)
+{
+}
+
+void ModeCommand::validate(User &user, const std::string &args)
+{
+    std::cout << "mode command validation |" << args << "|\n";
+    size_t npos = args.find_first_of(" ");
+    if (npos == std::string::npos)
+        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
+
+    std::string channelTag = args.substr(0, npos);
+    std::string modes = args.substr(npos);
+    std::cout << "tag: " << channelTag << std::endl;
+    std::cout << "modes: " << modes << std::endl;
+
+    // TODO: validate channel tag and modes
+    throw std::invalid_argument(Error::ERR_CHANOPRIVSNEEDED("localhost", user.nickname, args));
+}
+
+void ModeCommand::run(User &user, const std::string &args)
+{
+    (void)user;
+    (void)args;
+    std::cout << "running mode command\n";
 }

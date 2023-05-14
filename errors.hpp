@@ -29,6 +29,13 @@ struct Error
         oss << ":" << serverHost << " 403 " << nickname << " " << channel << " :No such channel\n";
         return oss.str();
     }
+
+    static std::string ERR_CHANOPRIVSNEEDED(const std::string &serverHost, const std::string &nickname, const std::string &channel)
+    {
+        std::ostringstream oss;
+        oss << ":" << serverHost << " 482 " << nickname << " " << channel << " :You're not a channel operator\n";
+        return oss.str();
+    }
 };
 
 #endif
