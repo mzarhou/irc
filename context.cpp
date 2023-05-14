@@ -107,13 +107,19 @@ bool Context::isUserGuest(const User &user)
 
 void Context::disconnectUser(int fd)
 {
-    guest_users.erase(fd);
-
-    REGISTRED_USERS_MAP::iterator registred_pos = registred_users.find(fd);
-    if (registred_pos != registred_users.end())
+    /**
+     * kick user from all channels
+     */
+    User *user = getSocketHandler(fd);
+    std::vector<Channel *> channels = user->channels();
+    std::vector<Channel *>::iterator it = channels.begin();
+    for (; it != channels.end(); it++)
     {
-        registred_users.erase(registred_pos);
+        (*it)->kickUser(*user);
     }
+
+    guest_users.erase(fd);
+    registred_users.erase(fd);
     close(fd);
 }
 
@@ -205,4 +211,9 @@ Channel *Context::getChannel(const std::string &tag)
     if (it != channels.end())
         return (&it->second);
     return (NULL);
+}
+
+void Context::deleteChannel(Channel &ch)
+{
+    channels.erase(ch.getTag());
 }
