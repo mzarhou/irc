@@ -13,6 +13,10 @@ private:
     Context *context;
     std::string tag;
     REGISTRED_USERS_MAP users;
+    REGISTRED_USERS_MAP operators;
+
+private:
+    bool empty();
 
 public:
     Channel();
@@ -24,7 +28,7 @@ public:
     void addNewUser(RegistredUser &user);
     std::string getTag();
     bool hasUser(const User &user);
-    void kickUser(User &user);
+    void kickUser(const User &user);
 
     void broadcast(const std::string &message);
     void emit(const User &userToExclude, const std::string &message);

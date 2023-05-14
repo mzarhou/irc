@@ -107,13 +107,19 @@ bool Context::isUserGuest(const User &user)
 
 void Context::disconnectUser(int fd)
 {
-    guest_users.erase(fd);
-
-    REGISTRED_USERS_MAP::iterator registred_pos = registred_users.find(fd);
-    if (registred_pos != registred_users.end())
+    /**
+     * kick user from all channels
+     */
+    User *user = getSocketHandler(fd);
+    std::vector<Channel *> channels = user->channels();
+    std::vector<Channel *>::iterator it = channels.begin();
+    for (; it != channels.end(); it++)
     {
-        registred_users.erase(registred_pos);
+        (*it)->kickUser(*user);
     }
+
+    guest_users.erase(fd);
+    registred_users.erase(fd);
     close(fd);
 }
 
@@ -122,15 +128,13 @@ void Context::disconnectUser(const std::string &nickname)
     GUEST_USERS_MAP::iterator guest_user_it = findGuestUserByNickName(nickname);
     if (guest_user_it != guest_users.end())
     {
-        disconnectUser(guest_user_it->second.fd);
+        return disconnectUser(guest_user_it->second.fd);
     }
-    else
+
+    REGISTRED_USERS_MAP::const_iterator registred_user_it = findRegistredUserByNickname(nickname);
+    if (registred_user_it != registred_users.end())
     {
-        REGISTRED_USERS_MAP::const_iterator registred_user_it = findRegistredUserByNickname(nickname);
-        if (registred_user_it != registred_users.end())
-        {
-            disconnectUser(registred_user_it->second.fd);
-        }
+        disconnectUser(registred_user_it->second.fd);
     }
 }
 
@@ -205,4 +209,9 @@ Channel *Context::getChannel(const std::string &tag)
     if (it != channels.end())
         return (&it->second);
     return (NULL);
+}
+
+void Context::deleteChannel(Channel &ch)
+{
+    channels.erase(ch.getTag());
 }

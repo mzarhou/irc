@@ -54,6 +54,7 @@ public:
     std::string getServerpassw(void);
 
     Channel &createNewChannel(const std::string &tag);
+    void deleteChannel(Channel &ch);
     void joinUserToChannel(User &user, const std::string &tag);
     std::vector<Channel *> getUserChannels(const User &user);
     bool isChannelExist(const std::string &tag);
