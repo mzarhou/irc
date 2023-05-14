@@ -50,7 +50,7 @@ std::pair<std::string, std::string> split(const std::string &str, char splitBy)
     size_t npos = str.find_first_of(splitBy);
     if (npos == std::string::npos)
         return std::make_pair(str, "");
-    return std::make_pair(str.substr(0, npos), str.substr(npos));
+    return std::make_pair(str.substr(0, npos), trim(str.substr(npos)));
 }
 
 #endif
