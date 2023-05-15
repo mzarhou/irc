@@ -61,6 +61,12 @@ struct Error
         oss << ":" << serverHost << " 412 " << nickname << " :No text to send\n";
         return oss.str();
     }
+    static std::string ERR_USERNOTINCHANNEL(const std::string &serverHost, const std::string &nickname, const std::string &targetNickname, const std::string &channel)
+    {
+        std::ostringstream oss;
+        oss << ":" << serverHost << " 441 " << nickname << " " << targetNickname << " " << channel << " :They aren't on that channel\n";
+        return oss.str();
+    }
 };
 
 #endif

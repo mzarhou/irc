@@ -49,6 +49,48 @@ void Channel::kickUser(const User &user)
     std::cout << "channel " << tag << ": " << users.size() << std::endl;
 }
 
+bool Channel::isUserOp(const User &user) const
+{
+    REGISTRED_USERS_MAP::const_iterator it = operators.find(user.fd);
+    return (it != operators.end());
+}
+
+// channel specific modes
+void Channel::toggleInviteOnlyStatus(char sign)
+{
+}
+
+void Channel::toggleModeratedStatus(char sign)
+{
+}
+
+void Channel::toggleNoExternalMsgStatus(char sign)
+{
+}
+
+void Channel::toggleOpsOnlyCanChangeTopicStatus(char sign)
+{
+}
+
+void Channel::setLimit(const std::string &limit)
+{
+    (void)limit;
+    // TODO: parse limit, if it's invalid ignore it
+}
+
+// user specific modes
+void Channel::toggleUserBanStatus(char sign, const std::string &targetNickname)
+{
+}
+
+void Channel::toggleUserVoicedStatus(char sign, const std::string &targetNickname)
+{
+}
+
+void Channel::toggleUserOpStatus(char sign, const std::string &targetNickname)
+{
+}
+
 /**
  * send message all users in the channel
  */

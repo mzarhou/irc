@@ -29,6 +29,19 @@ public:
     std::string getTag();
     bool hasUser(const User &user);
     void kickUser(const User &user);
+    bool isUserOp(const User &user) const;
+
+    // channel specific modes
+    void toggleInviteOnlyStatus(char sign);
+    void toggleModeratedStatus(char sign);
+    void toggleNoExternalMsgStatus(char sign);
+    void toggleOpsOnlyCanChangeTopicStatus(char sign);
+    void setLimit(const std::string &limit);
+
+    // user specific modes
+    void toggleUserBanStatus(char sign, const std::string &targetNickname);
+    void toggleUserVoicedStatus(char sign, const std::string &targetNickname);
+    void toggleUserOpStatus(char sign, const std::string &targetNickname);
 
     void broadcast(const std::string &message);
     void emit(const User &userToExclude, const std::string &message);

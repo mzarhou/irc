@@ -20,6 +20,19 @@ bool User::isGuest()
     return context->isUserGuest(*this);
 }
 
+bool User::isChannelOp(const Channel &ch)
+{
+    return ch.isUserOp(*this);
+}
+
+bool User::isChannelOp(const std::string &channelTag)
+{
+    Channel *ch = context->getChannel(channelTag);
+    if (!ch)
+        return false;
+    return isChannelOp(*ch);
+}
+
 void User::send(const std::string &msg) const
 {
     if (msg.length() == 0)

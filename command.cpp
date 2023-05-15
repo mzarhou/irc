@@ -239,6 +239,7 @@ void JoinCommand::run(User &user, const std::string &tag)
 
         oss.str("");
         oss.clear();
+        // TODO: send users/operators in channel + modes if user is operator
         oss << ":localhost 353 " << user.nickname << " = " << tag << " :@" << user.nickname << std::endl
             << ":localhost 366 " << user.nickname << " :End of /NAMES list." << std::endl;
         user.send(oss.str());
@@ -288,26 +289,156 @@ ModeCommand::ModeCommand(Context *context)
 {
 }
 
+std::queue<std::string> ModeCommand::parseModes(const std::string &modesStr)
+{
+    char sign = '+';
+    std::queue<std::string> queue;
+
+    for (size_t i = 0; i < modesStr.length(); i++)
+    {
+        char c = modesStr[i];
+        if (c == '+' || c == '-')
+        {
+            sign = c;
+            continue;
+        }
+        queue.push(std::string() + sign + c);
+    }
+    return queue;
+}
+
+std::queue<std::string> ModeCommand::parseModesArgs(const std::string &modesArgsStr)
+{
+    std::queue<std::string> queue;
+
+    std::istringstream iss(modesArgsStr);
+    std::string arg;
+
+    while (std::getline(iss, arg, ' '))
+        queue.push(arg);
+    return queue;
+}
+
+std::pair<queue_str, queue_str> ModeCommand::parseArgs(const std::string &args)
+{
+    std::pair<std::string, std::string> p = split(args, ' ');
+    std::queue<std::string> modes = parseModes(p.first);
+    std::queue<std::string> modesArgs = parseModesArgs(p.second);
+    return std::make_pair(modes, modesArgs);
+}
+
+void ModeCommand::validateModesArgs(User &user, const std::string &modes, queue_str modesArgs, const std::string &channelTag)
+{
+    size_t numberOfArgsNeeded = 0;
+    for (size_t i = 0; i < modes.length(); i++)
+    {
+        char mode = modes[i];
+        // TODO: add other modes here that require args
+        switch (mode)
+        {
+        case 'l':
+        case 'b':
+        case 'o':
+        case 'v':
+            numberOfArgsNeeded++;
+        }
+    }
+    if (numberOfArgsNeeded != modesArgs.size())
+        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
+
+    // validate nickname
+    for (size_t i = 0; i < modes.length(); i++)
+    {
+        char mode = modes[i];
+
+        // TODO: add other modes here that require valid nickname
+        if (mode != 'o' && mode != 'v')
+            continue;
+
+        std::string targetNickname = modesArgs.front();
+        modesArgs.pop();
+        User *targetUser = context->findRegistredUserByNickname(targetNickname);
+
+        if (!targetUser)
+            throw std::invalid_argument(Error::ERR_NOSUCHNICK("localhost", user.nickname, targetNickname));
+        if (!targetUser->isJoinedChannel(channelTag))
+            throw std::invalid_argument(Error::ERR_USERNOTINCHANNEL("localhost", user.nickname, targetUser->nickname, channelTag));
+    }
+}
+
 void ModeCommand::validate(User &user, const std::string &args)
 {
     std::cout << "mode command validation |" << args << "|\n";
-    size_t npos = args.find_first_of(" ");
-    if (npos == std::string::npos)
+
+    std::pair<std::string, std::string> p = split(args, ' ');
+    std::string channelTag = p.first;
+    std::string modesStr = getFirstWord(p.second.c_str());
+    std::pair<queue_str, queue_str> pmodes = parseArgs(p.second);
+    queue_str modes = pmodes.first;
+    queue_str modesArgs = pmodes.second;
+
+    if (channelTag.empty())
         throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
-
-    std::string channelTag = args.substr(0, npos);
-    std::string modes = args.substr(npos);
-    std::cout << "tag: " << channelTag << std::endl;
-    std::cout << "modes: " << modes << std::endl;
-
-    // TODO: validate channel tag and modes
-    throw std::invalid_argument(Error::ERR_CHANOPRIVSNEEDED("localhost", user.nickname, args));
+    if (!context->isChannelExist(channelTag))
+        throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, channelTag));
+    if (modes.empty())
+        return;
+    this->validateModesArgs(user, modesStr, modesArgs, channelTag);
+    if (user.isChannelOp(channelTag))
+        throw std::invalid_argument(Error::ERR_CHANOPRIVSNEEDED("localhost", user.nickname, channelTag));
 }
 
 void ModeCommand::run(User &user, const std::string &args)
 {
     (void)user;
-    (void)args;
+
+    std::pair<std::string, std::string> p = split(args, ' ');
+
+    Channel *ch = context->getChannel(p.first);
+
+    std::pair<queue_str, queue_str> pmodes = parseArgs(p.second);
+    queue_str modes = pmodes.first;
+    queue_str modesArgs = pmodes.second;
+
+    while (!modes.empty())
+    {
+        std::string item = modes.front();
+        modes.pop();
+        char sign = item[0];
+        char mode = item[1];
+        switch (mode)
+        {
+        case 'i':
+            ch->toggleInviteOnlyStatus(sign);
+            break;
+        case 'l':
+            ch->setLimit(modesArgs.front());
+            modesArgs.pop();
+            break;
+        case 'm':
+            ch->toggleModeratedStatus(sign);
+            break;
+        case 'n':
+            ch->toggleNoExternalMsgStatus(sign);
+            break;
+        case 't':
+            ch->toggleOpsOnlyCanChangeTopicStatus(sign);
+            break;
+        case 'b':
+            ch->toggleUserBanStatus(sign, modesArgs.front());
+            modesArgs.pop();
+            break;
+        case 'o':
+            ch->toggleUserOpStatus(sign, modesArgs.front());
+            modesArgs.pop();
+            break;
+        case 'v':
+            ch->toggleUserVoicedStatus(sign, modesArgs.front());
+            modesArgs.pop();
+            break;
+        }
+    }
+
     std::cout << "running mode command\n";
 }
 

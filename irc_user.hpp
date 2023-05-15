@@ -33,6 +33,8 @@ public: // constructors
 
     bool isRegistred();
     bool isGuest();
+    bool isChannelOp(const Channel &ch);
+    bool isChannelOp(const std::string &channelTag);
     void send(const std::string &msg) const;
     bool isJoinedChannel(const std::string &channelTag);
     std::vector<Channel *> channels();
