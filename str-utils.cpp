@@ -53,4 +53,19 @@ std::pair<std::string, std::string> split(const std::string &str, char splitBy)
     return std::make_pair(str.substr(0, npos), trim(str.substr(npos)));
 }
 
+void removeChar(std::string &str, char c)
+{
+    str.erase(remove(str.begin(), str.end(), c), str.end());
+}
+
+bool strIncludes(const std::string &str, char c)
+{
+    for (size_t i = 0; i < str.length(); i++)
+    {
+        if (str[i] == c)
+            return true;
+    }
+    return false;
+}
+
 #endif

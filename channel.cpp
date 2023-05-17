@@ -77,46 +77,109 @@ void Channel::kickUser(const User &user)
     std::cout << "channel " << tag << ": " << users.size() << std::endl;
 }
 
-bool Channel::isUserOp(const User &user) const
+// check modes
+bool Channel::isInviteOnly()
 {
-    REGISTRED_USERS_MAP::const_iterator it = operators.find(user.fd);
-    return (it != operators.end());
+    return strIncludes(modes, 'i');
+}
+
+bool Channel::everyOneCanChangeTopic()
+{
+    return !strIncludes(modes, 't');
+}
+
+bool Channel::externalMsgsAllowed()
+{
+    return !strIncludes(modes, 'n');
+}
+
+bool Channel::moderated()
+{
+    return strIncludes(modes, 'm');
+}
+
+bool Channel::isLimited()
+{
+    return strIncludes(modes, 'l');
+}
+
+std::string Channel::getModes()
+{
+    std::ostringstream oss;
+    oss << '+' << modes;
+    if (this->isLimited())
+        oss << ' ' << limit;
+    return (oss.str());
 }
 
 // channel specific modes
-void Channel::toggleInviteOnlyStatus(char sign)
+void Channel::toggleMode(const User &user, char sign, char mode)
 {
+    if (sign == '+' && strIncludes(modes, mode))
+        return;
+    if (sign == '-' && !strIncludes(modes, mode))
+        return;
+
+    if (sign == '+' && mode == 'l')
+        modes += 'l';
+    else if (sign == '+')
+    {
+        size_t pos = 0;
+        for (; pos < modes.length(); pos++)
+        {
+            if (modes[pos] == 'l' || modes[pos] > mode)
+                break;
+        }
+        modes.insert(pos, 1, mode);
+    }
+    else
+    {
+        removeChar(modes, mode);
+    }
+
+    std::ostringstream oss;
+    oss << user.getMsgPrefix() << " MODE " << this->getTag() << " " << sign << mode;
+    if (mode == 'l')
+        oss << " " << limit;
+    oss << std::endl;
+    this->broadcast(oss.str());
 }
 
-void Channel::toggleModeratedStatus(char sign)
+void Channel::toggleLimit(const User &user, char sign, const std::string &limitStr)
 {
-}
-
-void Channel::toggleNoExternalMsgStatus(char sign)
-{
-}
-
-void Channel::toggleOpsOnlyCanChangeTopicStatus(char sign)
-{
-}
-
-void Channel::setLimit(const std::string &limit)
-{
-    (void)limit;
-    // TODO: parse limit, if it's invalid ignore it
+    if (sign == '-')
+        return this->toggleMode(user, sign, 'l');
+    try
+    {
+        int limit = std::stoi(limitStr);
+        if (limit <= 0)
+            return;
+        this->limit = limit;
+        this->toggleMode(user, sign, 'l');
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << e.what() << '\n';
+    }
 }
 
 // user specific modes
 void Channel::toggleUserBanStatus(char sign, const std::string &targetNickname)
 {
+    (void)sign;
+    (void)targetNickname;
 }
 
 void Channel::toggleUserVoicedStatus(char sign, const std::string &targetNickname)
 {
+    (void)sign;
+    (void)targetNickname;
 }
 
 void Channel::toggleUserOpStatus(char sign, const std::string &targetNickname)
 {
+    (void)sign;
+    (void)targetNickname;
 }
 
 /**

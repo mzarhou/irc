@@ -13,7 +13,13 @@ private:
     Context *context;
     std::string tag;
     REGISTRED_USERS_MAP users;
+
+    // channel modes
+    std::string modes;
+    std::vector<std::string> bannedNicknames;
+    REGISTRED_USERS_MAP voicedUsers;
     REGISTRED_USERS_MAP operators;
+    size_t limit;
 
 private:
     bool empty();
@@ -32,14 +38,18 @@ public:
     std::string getTag();
     bool hasUser(const User &user);
     void kickUser(const User &user);
-    bool isUserOp(const User &user) const;
+
+    // check modes
+    bool isInviteOnly();
+    bool everyOneCanChangeTopic();
+    bool externalMsgsAllowed();
+    bool moderated();
+    bool isLimited();
 
     // channel specific modes
-    void toggleInviteOnlyStatus(char sign);
-    void toggleModeratedStatus(char sign);
-    void toggleNoExternalMsgStatus(char sign);
-    void toggleOpsOnlyCanChangeTopicStatus(char sign);
-    void setLimit(const std::string &limit);
+    std::string getModes();
+    void toggleMode(const User &user, char sign, char mode);
+    void toggleLimit(const User &user, char sign, const std::string &limit);
 
     // user specific modes
     void toggleUserBanStatus(char sign, const std::string &targetNickname);
@@ -48,7 +58,6 @@ public:
 
     void broadcast(const std::string &message);
     void emit(const User &userToExclude, const std::string &message);
-    // void broadcast_msg(User &user, const std::string &message);
 };
 
 #endif

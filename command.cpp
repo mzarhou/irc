@@ -280,13 +280,6 @@ void PartCommand::run(User &user, const std::string &args)
         user.send(oss.str());
     }
 }
-/**
- * PRIVMSG COMMAND
- */
-PrivMsgCommand::PrivMsgCommand(Context *context)
-    : CmdHandler(context)
-{
-}
 
 /**
  * MODE COMMAND
@@ -391,13 +384,13 @@ void ModeCommand::validate(User &user, const std::string &args)
     if (modes.empty())
         return;
     this->validateModesArgs(user, modesStr, modesArgs, channelTag);
-    if (user.isChannelOp(channelTag))
+    if (!user.isChannelOp(channelTag))
         throw std::invalid_argument(Error::ERR_CHANOPRIVSNEEDED("localhost", user.nickname, channelTag));
 }
 
 void ModeCommand::run(User &user, const std::string &args)
 {
-    (void)user;
+    // mode [channelTag] [modes] [modesArgs]
 
     std::pair<std::string, std::string> p = split(args, ' ');
 
@@ -406,6 +399,13 @@ void ModeCommand::run(User &user, const std::string &args)
     std::pair<queue_str, queue_str> pmodes = parseArgs(p.second);
     queue_str modes = pmodes.first;
     queue_str modesArgs = pmodes.second;
+
+    if (modes.empty())
+    {
+        std::ostringstream oss;
+        oss << ":localhost 324 " << user.nickname << " " << ch->getTag() << " " << ch->getModes() << std::endl;
+        user.send(oss.str());
+    }
 
     while (!modes.empty())
     {
@@ -416,20 +416,20 @@ void ModeCommand::run(User &user, const std::string &args)
         switch (mode)
         {
         case 'i':
-            ch->toggleInviteOnlyStatus(sign);
+            ch->toggleMode(user, sign, 'i');
             break;
         case 'l':
-            ch->setLimit(modesArgs.front());
+            ch->toggleLimit(user, sign, modesArgs.front());
             modesArgs.pop();
             break;
         case 'm':
-            ch->toggleModeratedStatus(sign);
+            ch->toggleMode(user, sign, 'm');
             break;
         case 'n':
-            ch->toggleNoExternalMsgStatus(sign);
+            ch->toggleMode(user, sign, 'n');
             break;
         case 't':
-            ch->toggleOpsOnlyCanChangeTopicStatus(sign);
+            ch->toggleMode(user, sign, 't');
             break;
         case 'b':
             ch->toggleUserBanStatus(sign, modesArgs.front());
@@ -452,6 +452,11 @@ void ModeCommand::run(User &user, const std::string &args)
 /**
  * PRIVMSG COMMAND
  */
+PrivMsgCommand::PrivMsgCommand(Context *context)
+    : CmdHandler(context)
+{
+}
+
 void PrivMsgCommand::validate(User &user, const std::string &args)
 {
     std::pair<std::string, std::string> p = split(args, ' ');
