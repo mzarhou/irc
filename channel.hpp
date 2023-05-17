@@ -25,6 +25,9 @@ public:
 
     Channel &operator=(const Channel &other);
 
+    bool isUserOp(const User &user) const;
+    std::string getUsersStr();
+
     void addNewUser(RegistredUser &user);
     std::string getTag();
     bool hasUser(const User &user);
