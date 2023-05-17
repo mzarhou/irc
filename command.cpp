@@ -270,8 +270,10 @@ void PartCommand::run(User &user, const std::string &args)
     if (ch)
     {
         ch->kickUser(user);
+
         std::ostringstream oss;
         oss << user.getMsgPrefix() << " PART " << ch->getTag() << '\n';
+        ch->broadcast(oss.str());
         user.send(oss.str());
     }
 }
