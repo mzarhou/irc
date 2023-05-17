@@ -43,6 +43,17 @@ void User::send(const std::string &msg) const
     }
 }
 
+void User::sendToUserChannels(const std::string &message)
+{
+    std::vector<Channel *> channels = this->channels();
+    std::vector<Channel *>::iterator it = channels.begin();
+
+    for (; it != channels.end(); it++)
+    {
+        (*it)->emit(*this, message);
+    }
+}
+
 bool User::isJoinedChannel(const std::string &channelTag)
 {
     Channel *ch = context->getChannel(channelTag);
@@ -59,6 +70,7 @@ std::vector<Channel *> User::channels()
 std::string User::getMsgPrefix() const
 {
     std::ostringstream oss;
+    // TODO: change localhost with user ip
     oss << ":" << nickname << "!" << username << "@localhost";
     return oss.str();
 }
@@ -108,7 +120,7 @@ void GuestUser::handleSocket(const Command &cmd)
      * user must register before sending other valid commands
      * than this ones
      */
-    std::string cmds[] = {"PASS", "USER", "NICK"};
+    std::string cmds[] = {"PASS", "USER", "NICK", "QUIT"};
     std::string *it = std::find(std::begin(cmds), std::end(cmds), cmd.name);
     if (it == std::end(cmds))
     {

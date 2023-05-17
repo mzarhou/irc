@@ -132,6 +132,8 @@ void NickCommand::validate(User &user, const std::string &args)
     if (context->isNickNameGuest(args))
     {
         User *oldGuest = context->findGuestUserByNickName(args);
+
+        // TODO: change 0.0.0.0 with user ip
         oldGuest->send("ERROR :Closing Link: 0.0.0.0 (Overridden)\n");
         context->disconnectUser(args);
     }
@@ -486,4 +488,35 @@ void PrivMsgCommand::run(User &user, const std::string &args)
         User *targetUser = context->findRegistredUserByNickname(channelTagOrNickname);
         targetUser->send(message);
     }
+}
+
+/**
+ * QUIT COMMAND
+ */
+QuitCommand::QuitCommand(Context *context)
+    : CmdHandler(context)
+{
+}
+
+void QuitCommand::validate(User &user, const std::string &args)
+{
+    (void)user;
+    (void)args;
+    // no validation here
+}
+
+void QuitCommand::run(User &user, const std::string &args)
+{
+    (void)args;
+    std::cout << "running quit" << std::endl;
+    if (user.isRegistred())
+    {
+        std::ostringstream oss;
+        oss << user.getMsgPrefix() << " QUIT :Client Quit\n";
+        user.sendToUserChannels(oss.str());
+    }
+
+    // TODO: change 127.0.0.1 with user ip
+    user.send("ERROR :Closing Link: 127.0.0.1 (Client Quit)\n");
+    context->disconnectUser(user.fd);
 }

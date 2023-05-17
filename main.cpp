@@ -197,7 +197,9 @@ int main(int argc, char **argv)
                     {
                         perror("recv");
                     }
-                    context.disconnectUser(client_fd);
+                    std::string message("QUIT");
+                    context.getSocketHandler(client_fd)
+                        ->handleSocket(Command::fromMessage(message));
                     del_from_pfds(pfds, i, &fd_count);
                 }
                 else
