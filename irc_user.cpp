@@ -30,6 +30,17 @@ void User::send(const std::string &msg) const
     }
 }
 
+void User::sendToUserChannels(const std::string &message)
+{
+    std::vector<Channel *> channels = this->channels();
+    std::vector<Channel *>::iterator it = channels.begin();
+
+    for (; it != channels.end(); it++)
+    {
+        (*it)->emit(*this, message);
+    }
+}
+
 bool User::isJoinedChannel(const std::string &channelTag)
 {
     Channel *ch = context->getChannel(channelTag);

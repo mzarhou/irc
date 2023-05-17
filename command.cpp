@@ -350,7 +350,7 @@ void QuitCommand::run(User &user, const std::string &args)
     {
         std::ostringstream oss;
         oss << user.getMsgPrefix() << " QUIT :Client Quit\n";
-        user.send(oss.str());
+        user.sendToUserChannels(oss.str());
     }
 
     // TODO: change 127.0.0.1 with user ip
