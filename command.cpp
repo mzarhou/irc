@@ -150,11 +150,7 @@ void NickCommand::run(User &user, const std::string &newNickname)
 
     if (context->isNickNameRegistred(newNickname))
     {
-        std::vector<Channel *> channels = user.channels();
-        std::vector<Channel *>::iterator ch_it = channels.begin();
-        for (; ch_it != channels.end(); ch_it++)
-            // (*ch_it)->emit(user, oss.str());
-            user.send(oss.str());
+        user.sendToUserChannels(oss.str());
     }
 }
 

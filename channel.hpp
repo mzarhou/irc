@@ -38,6 +38,7 @@ public:
     std::string getTag();
     bool hasUser(const User &user);
     void kickUser(const User &user);
+    REGISTRED_USERS_MAP getUsers();
 
     // check modes
     bool isInviteOnly();

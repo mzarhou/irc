@@ -43,14 +43,27 @@ void User::send(const std::string &msg) const
     }
 }
 
+/**
+ * send message to all users in all user channels
+ * send message one time only for each user
+ */
 void User::sendToUserChannels(const std::string &message)
 {
     std::vector<Channel *> channels = this->channels();
     std::vector<Channel *>::iterator it = channels.begin();
+    std::map<int, int> usersFds;
 
     for (; it != channels.end(); it++)
     {
-        (*it)->emit(*this, message);
+        REGISTRED_USERS_MAP users = (*it)->getUsers();
+        REGISTRED_USERS_MAP::iterator usersIt = users.begin();
+        for (; usersIt != users.end(); usersIt++)
+        {
+            if (usersFds.find(usersIt->second.fd) != usersFds.end())
+                continue;
+            usersIt->second.send(message);
+            usersFds[usersIt->second.fd] = usersIt->second.fd;
+        }
     }
 }
 
