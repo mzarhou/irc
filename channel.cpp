@@ -26,6 +26,34 @@ Channel &Channel::operator=(const Channel &other)
     return *this;
 }
 
+bool Channel::isUserOp(const User &user) const
+{
+    REGISTRED_USERS_MAP::const_iterator opsIt = operators.find(user.fd);
+    return (opsIt != operators.end());
+}
+
+std::string Channel::getUsersStr()
+{
+    std::string usersStr = "";
+    REGISTRED_USERS_MAP::iterator usersIt = users.begin();
+    for (; usersIt != users.end(); usersIt++)
+    {
+        if (!this->isUserOp(usersIt->second))
+        {
+            usersStr += usersIt->second.nickname;
+            usersStr += " ";
+        }
+    }
+    REGISTRED_USERS_MAP::iterator opsIt = operators.begin();
+    for (; opsIt != operators.end(); opsIt++)
+    {
+        usersStr += "@";
+        usersStr += opsIt->second.nickname;
+        usersStr += " ";
+    }
+    return usersStr;
+}
+
 void Channel::addNewUser(RegistredUser &user)
 {
     if (this->empty())

@@ -235,14 +235,17 @@ void JoinCommand::run(User &user, const std::string &tag)
     {
         context->joinUserToChannel(user, tag);
 
-        std::ostringstream oss;
-        oss << user.getMsgPrefix() << " JOIN :" << tag << std::endl;
-        context->getChannel(tag)->broadcast(oss.str());
+        Channel *ch = context->getChannel(tag);
 
-        oss.str("");
-        oss.clear();
-        // TODO: send users/operators in channel + modes if user is operator
-        oss << ":localhost 353 " << user.nickname << " = " << tag << " :@" << user.nickname << std::endl
+        {
+            std::ostringstream oss;
+            oss << user.getMsgPrefix() << " JOIN :" << tag << std::endl;
+            ch->broadcast(oss.str());
+        }
+
+        // TODO: send channel modes if user is operator
+        std::ostringstream oss;
+        oss << ":localhost 353 " << user.nickname << " = " << tag << " :" << ch->getUsersStr() << std::endl
             << ":localhost 366 " << user.nickname << " :End of /NAMES list." << std::endl;
         user.send(oss.str());
     }
@@ -270,8 +273,10 @@ void PartCommand::run(User &user, const std::string &args)
     if (ch)
     {
         ch->kickUser(user);
+
         std::ostringstream oss;
         oss << user.getMsgPrefix() << " PART " << ch->getTag() << '\n';
+        ch->broadcast(oss.str());
         user.send(oss.str());
     }
 }
