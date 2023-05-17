@@ -34,6 +34,7 @@ public: // constructors
     bool isRegistred();
     bool isGuest();
     void send(const std::string &msg) const;
+    void sendToUserChannels(const std::string &message);
     bool isJoinedChannel(const std::string &channelTag);
     std::vector<Channel *> channels();
     std::string getMsgPrefix() const;
