@@ -32,6 +32,7 @@ public:
     std::string getTag();
     bool hasUser(const User &user);
     void kickUser(const User &user);
+    REGISTRED_USERS_MAP getUsers();
 
     void broadcast(const std::string &message);
     void emit(const User &userToExclude, const std::string &message);

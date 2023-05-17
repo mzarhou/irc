@@ -77,6 +77,11 @@ void Channel::kickUser(const User &user)
     std::cout << "channel " << tag << ": " << users.size() << std::endl;
 }
 
+REGISTRED_USERS_MAP Channel::getUsers()
+{
+    return this->users;
+}
+
 /**
  * send message all users in the channel
  */
