@@ -7,10 +7,14 @@
 #include <netdb.h>
 #include "irc_user.hpp"
 #include "errors.hpp"
+#include <queue>
+#include <utility>
 
 class Context;
 
 #include "context.hpp"
+
+typedef std::queue<std::string> queue_str;
 
 struct Command
 {
@@ -92,6 +96,19 @@ class PartCommand : public CmdHandler
 {
 public:
     PartCommand(Context *context);
+    void validate(User &user, const std::string &args);
+    void run(User &user, const std::string &args);
+};
+
+class ModeCommand : public CmdHandler
+{
+public:
+    ModeCommand(Context *context);
+    std::queue<std::string> parseModes(const std::string &modes);
+    std::queue<std::string> parseModesArgs(const std::string &modesArgs);
+    std::pair<queue_str, queue_str> parseArgs(const std::string &args);
+
+    void validateModesArgs(User &user, const std::string &modes, queue_str modesArgs, const std::string &channelTag);
     void validate(User &user, const std::string &args);
     void run(User &user, const std::string &args);
 };

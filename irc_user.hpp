@@ -31,8 +31,17 @@ public: // constructors
     // User &operator=(const User &other);
     virtual ~User();
 
+    // policy
+    void canJoinChannel(const Channel &ch, const std::string &key);
+    void canJoinChannel(const std::string &channelTag, const std::string &key);
+    void canSendPrivMessage(const std::string &channelTagOrNickname);
+    void canManageChannelModes(const Channel &ch);
+    void canManageChannelModes(const std::string &channelTagOrNickname);
+
     bool isRegistred();
     bool isGuest();
+    bool isChannelOp(const Channel &ch);
+    bool isChannelOp(const std::string &channelTag);
     void send(const std::string &msg) const;
     void sendToUserChannels(const std::string &message);
     bool isJoinedChannel(const std::string &channelTag);

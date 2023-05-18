@@ -182,25 +182,36 @@ JoinCommand::JoinCommand(Context *context)
 {
 }
 
-void JoinCommand::validate(User &user, const std::string &tag)
+void JoinCommand::validate(User &user, const std::string &args)
 {
-    // TODO: modes
-    (void)user;
-
-    if (tag == "0")
+    if (args == "0")
         return;
+    std::pair<std::string, std::string> p = split(args, ' ');
+    std::string tag = p.first;
+    std::string key = p.second;
     if (tag.find(',') != std::string::npos)
     {
         std::cout << "multiple channels" << std::endl;
         std::istringstream iss(tag);
-        std::string arg;
-        while (std::getline(iss, arg, ','))
+        std::queue<std::string> tags = splitChunks(tag, ',');
+        std::queue<std::string> keys = splitChunks(key, ',');
+        while (!tags.empty())
         {
-            if (arg == "0")
-                user.send(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, arg));
+            tag = tags.front();
+            tags.pop();
+            key = "";
+
+            if (!keys.empty())
+            {
+                key = keys.front();
+                keys.pop();
+            }
+
+            if (tag == "0")
+                user.send(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, tag));
             else
             {
-                std::string message = "JOIN " + arg;
+                std::string message = "JOIN " + tag + " " + key;
                 user.handleSocket(Command::fromMessage(message));
             }
         }
@@ -212,11 +223,17 @@ void JoinCommand::validate(User &user, const std::string &tag)
         throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, tag));
     if (user.isJoinedChannel(tag))
         throw std::invalid_argument("");
+    user.canJoinChannel(tag, key);
 }
 
-void JoinCommand::run(User &user, const std::string &tag)
+void JoinCommand::run(User &user, const std::string &args)
 {
+
+    std::pair<std::string, std::string> p = split(args, ' ');
+    std::string tag = p.first;
+
     std::cout << "running join command -> " << tag << std::endl;
+
     if (tag == "0")
     {
         std::vector<Channel *> channels = user.channels();
@@ -239,8 +256,9 @@ void JoinCommand::run(User &user, const std::string &tag)
             ch->broadcast(oss.str());
         }
 
-        // TODO: send channel modes if user is operator
         std::ostringstream oss;
+        if (user.isChannelOp(ch->getTag()))
+            oss << ":localhost MODE " << ch->getTag() << " " << ch->getModes(user) << std::endl;
         oss << ":localhost 353 " << user.nickname << " = " << tag << " :" << ch->getUsersStr() << std::endl
             << ":localhost 366 " << user.nickname << " :End of /NAMES list." << std::endl;
         user.send(oss.str());
@@ -257,7 +275,6 @@ PartCommand::PartCommand(Context *context)
 
 void PartCommand::validate(User &user, const std::string &args)
 {
-    (void)user;
     if (args.empty())
         throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
     else if (!context->isChannelExist(args))
@@ -279,6 +296,194 @@ void PartCommand::run(User &user, const std::string &args)
 }
 
 /**
+ * MODE COMMAND
+ */
+ModeCommand::ModeCommand(Context *context)
+    : CmdHandler(context)
+{
+}
+
+std::queue<std::string> ModeCommand::parseModes(const std::string &modesStr)
+{
+    char sign = '+';
+    std::queue<std::string> queue;
+
+    for (size_t i = 0; i < modesStr.length(); i++)
+    {
+        char c = modesStr[i];
+        if (c == '+' || c == '-')
+        {
+            sign = c;
+            continue;
+        }
+        queue.push(std::string() + sign + c);
+    }
+    return queue;
+}
+
+std::queue<std::string> ModeCommand::parseModesArgs(const std::string &modesArgsStr)
+{
+    std::queue<std::string> queue;
+
+    std::istringstream iss(modesArgsStr);
+    std::string arg;
+
+    while (std::getline(iss, arg, ' '))
+        queue.push(arg);
+    return queue;
+}
+
+std::pair<queue_str, queue_str> ModeCommand::parseArgs(const std::string &args)
+{
+    std::pair<std::string, std::string> p = split(args, ' ');
+    std::queue<std::string> modes = parseModes(p.first);
+    std::queue<std::string> modesArgs = parseModesArgs(p.second);
+    return std::make_pair(modes, modesArgs);
+}
+
+void ModeCommand::validateModesArgs(User &user, const std::string &modes, queue_str modesArgs, const std::string &channelTag)
+{
+    char sign = '+';
+    size_t numberOfArgsNeeded = 0;
+    for (size_t i = 0; i < modes.length(); i++)
+    {
+        char mode = modes[i];
+        switch (mode)
+        {
+        case 'k':
+        case 'b':
+        case 'o':
+        case 'v':
+            numberOfArgsNeeded++;
+            break;
+        case 'l':
+            if (sign == '+')
+                numberOfArgsNeeded++;
+            break;
+        case '-':
+            sign = '-';
+            break;
+        case '+':
+            sign = '+';
+            break;
+        }
+    }
+
+    if (numberOfArgsNeeded > modesArgs.size())
+        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
+
+    // validate nickname
+    for (size_t i = 0; i < modes.length(); i++)
+    {
+        char mode = modes[i];
+        if (mode != 'o' && mode != 'v')
+            continue;
+
+        std::string targetNickname = modesArgs.front();
+        modesArgs.pop();
+        User *targetUser = context->findRegistredUserByNickname(targetNickname);
+
+        if (!targetUser)
+            throw std::invalid_argument(Error::ERR_NOSUCHNICK("localhost", user.nickname, targetNickname));
+        if (!targetUser->isJoinedChannel(channelTag))
+            throw std::invalid_argument(Error::ERR_USERNOTINCHANNEL("localhost", user.nickname, targetUser->nickname, channelTag));
+    }
+}
+
+void ModeCommand::validate(User &user, const std::string &args)
+{
+    std::cout << "mode command validation |" << args << "|\n";
+
+    std::pair<std::string, std::string> p = split(args, ' ');
+    std::string channelTag = p.first;
+    std::string modesStr = getFirstWord(p.second.c_str());
+    std::pair<queue_str, queue_str> pmodes = parseArgs(p.second);
+    queue_str modes = pmodes.first;
+    queue_str modesArgs = pmodes.second;
+
+    if (channelTag.empty())
+        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
+    if (!context->isChannelExist(channelTag))
+        throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, channelTag));
+    if (modes.empty())
+        return;
+    this->validateModesArgs(user, modesStr, modesArgs, channelTag);
+    user.canManageChannelModes(channelTag);
+}
+
+void ModeCommand::run(User &user, const std::string &args)
+{
+    // mode [channelTag] [modes] [modesArgs]
+
+    std::pair<std::string, std::string> p = split(args, ' ');
+
+    Channel *ch = context->getChannel(p.first);
+
+    std::pair<queue_str, queue_str> pmodes = parseArgs(p.second);
+    queue_str modes = pmodes.first;
+    queue_str modesArgs = pmodes.second;
+
+    if (modes.empty())
+    {
+        std::ostringstream oss;
+        oss << ":localhost 324 " << user.nickname << " " << ch->getTag() << " " << ch->getModes(user) << std::endl;
+        user.send(oss.str());
+    }
+
+    while (!modes.empty())
+    {
+        std::string item = modes.front();
+        modes.pop();
+        char sign = item[0];
+        char mode = item[1];
+        switch (mode)
+        {
+        case 'i':
+            ch->toggleMode(user, sign, 'i');
+            break;
+        case 'l':
+            if (sign == '-')
+            {
+                ch->toggleLimit(user, sign, "");
+            }
+            else
+            {
+                ch->toggleLimit(user, sign, modesArgs.front());
+                modesArgs.pop();
+            }
+            break;
+        case 'k':
+            ch->toggleKey(user, sign, modesArgs.front());
+            modesArgs.pop();
+            break;
+        case 'm':
+            ch->toggleMode(user, sign, 'm');
+            break;
+        case 'n':
+            ch->toggleMode(user, sign, 'n');
+            break;
+        case 't':
+            ch->toggleMode(user, sign, 't');
+            break;
+        case 'b':
+            ch->toggleUserBanStatus(user, sign, modesArgs.front());
+            modesArgs.pop();
+            break;
+        case 'o':
+            ch->toggleUserOpStatus(user, sign, modesArgs.front());
+            modesArgs.pop();
+            break;
+        case 'v':
+            ch->toggleUserVoicedStatus(user, sign, modesArgs.front());
+            modesArgs.pop();
+            break;
+        }
+    }
+
+    std::cout << "running mode command\n";
+}
+
+/**
  * PRIVMSG COMMAND
  */
 PrivMsgCommand::PrivMsgCommand(Context *context)
@@ -297,6 +502,7 @@ void PrivMsgCommand::validate(User &user, const std::string &args)
         throw std::invalid_argument(Error::ERR_NOSUCHNICK("localhost", user.nickname, p.first));
     if (p.first[0] != '#' && !context->isNickNameRegistred(p.first))
         throw std::invalid_argument(Error::ERR_NOSUCHNICK("localhost", user.nickname, p.first));
+    user.canSendPrivMessage(p.first);
 }
 
 void PrivMsgCommand::run(User &user, const std::string &args)
