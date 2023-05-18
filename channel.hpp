@@ -23,6 +23,7 @@ private:
 
 private:
     bool empty();
+    void broadcastToggleUserMessage(const User &user, char sign, const std::string &targetNickname, char mode);
 
 public:
     Channel();
@@ -32,30 +33,33 @@ public:
     Channel &operator=(const Channel &other);
 
     bool isUserOp(const User &user) const;
+    bool isUserBanned(const User &user) const;
+    bool isUserVoiced(const User &user) const;
     std::string getUsersStr();
 
     void addNewUser(RegistredUser &user);
-    std::string getTag();
-    bool hasUser(const User &user);
+    std::string getTag() const;
+    bool hasUser(const User &user) const;
     void kickUser(const User &user);
     REGISTRED_USERS_MAP getUsers();
+    bool checkLimit() const;
 
     // check modes
-    bool isInviteOnly();
-    bool everyOneCanChangeTopic();
-    bool externalMsgsAllowed();
-    bool moderated();
-    bool isLimited();
+    bool isInviteOnly() const;
+    bool everyOneCanChangeTopic() const;
+    bool externalMsgsAllowed() const;
+    bool moderated() const;
+    bool isLimited() const;
 
     // channel specific modes
-    std::string getModes();
+    std::string getModes() const;
     void toggleMode(const User &user, char sign, char mode);
     void toggleLimit(const User &user, char sign, const std::string &limit);
 
     // user specific modes
-    void toggleUserBanStatus(char sign, const std::string &targetNickname);
-    void toggleUserVoicedStatus(char sign, const std::string &targetNickname);
-    void toggleUserOpStatus(char sign, const std::string &targetNickname);
+    void toggleUserBanStatus(const User &user, char sign, const std::string &targetNickname);
+    void toggleUserVoicedStatus(const User &user, char sign, const std::string &targetNickname);
+    void toggleUserOpStatus(const User &user, char sign, const std::string &targetNickname);
 
     void broadcast(const std::string &message);
     void emit(const User &userToExclude, const std::string &message);

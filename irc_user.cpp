@@ -10,6 +10,68 @@ User::User(const User &other)
     *this = other;
 }
 
+void User::canManageChannelModes(const Channel &ch)
+{
+    if (!this->isChannelOp(ch))
+        throw std::invalid_argument(Error::ERR_CHANOPRIVSNEEDED("localhost", this->nickname, ch.getTag()));
+}
+
+void User::canManageChannelModes(const std::string &validChannelTag)
+{
+    Channel *ch = context->getChannel(validChannelTag);
+    if (!ch)
+        return;
+    this->canManageChannelModes(*ch);
+}
+
+void User::canSendPrivMessage(const std::string &validChannelTagOrNickname)
+{
+    if (validChannelTagOrNickname.empty() || validChannelTagOrNickname[0] != '#')
+        return;
+
+    Channel *ch = context->getChannel(validChannelTagOrNickname);
+    if (!ch || ch->isUserOp(*this) || ch->isUserVoiced(*this))
+        return;
+    if (ch->moderated() || (!ch->hasUser(*this) && !ch->externalMsgsAllowed()))
+    {
+        std::ostringstream oss;
+        oss << ":localhost " << 404 << " " << this->nickname << " " << ch->getTag() << " :Cannot send to nick/channel\n";
+        throw std::invalid_argument(oss.str());
+    }
+}
+
+void User::canJoinChannel(const Channel &ch)
+{
+    std::ostringstream oss;
+
+    oss << "localhost ";
+    if (ch.isInviteOnly())
+    {
+        oss << 473 << " " << this->nickname << " " << ch.getTag() << " :Cannot join channel (+i) - you must be invited\n";
+        throw std::invalid_argument(oss.str());
+    }
+
+    if (ch.isUserBanned(*this))
+    {
+        oss << 474 << " " << this->nickname << " " << ch.getTag() << " :Cannot join channel (+b) - you are banned\n";
+        throw std::invalid_argument(oss.str());
+    }
+
+    if (!ch.checkLimit())
+    {
+        oss << 471 << " " << this->nickname << " " << ch.getTag() << " :Cannot join channel (+l) - channel is full, try again later\n";
+        throw std::invalid_argument(oss.str());
+    }
+}
+
+void User::canJoinChannel(const std::string &channelTag)
+{
+    Channel *ch = context->getChannel(channelTag);
+    if (!ch)
+        return;
+    return this->canJoinChannel(*ch);
+}
+
 bool User::isRegistred()
 {
     return context->isUserRegistred(*this);

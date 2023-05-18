@@ -212,6 +212,7 @@ void JoinCommand::validate(User &user, const std::string &tag)
         throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, tag));
     if (user.isJoinedChannel(tag))
         throw std::invalid_argument("");
+    user.canJoinChannel(tag);
 }
 
 void JoinCommand::run(User &user, const std::string &tag)
@@ -239,8 +240,9 @@ void JoinCommand::run(User &user, const std::string &tag)
             ch->broadcast(oss.str());
         }
 
-        // TODO: send channel modes if user is operator
         std::ostringstream oss;
+        if (user.isChannelOp(ch->getTag()))
+            oss << ":localhost MODE " << ch->getTag() << " " << ch->getModes() << std::endl;
         oss << ":localhost 353 " << user.nickname << " = " << tag << " :" << ch->getUsersStr() << std::endl
             << ":localhost 366 " << user.nickname << " :End of /NAMES list." << std::endl;
         user.send(oss.str());
@@ -380,8 +382,7 @@ void ModeCommand::validate(User &user, const std::string &args)
     if (modes.empty())
         return;
     this->validateModesArgs(user, modesStr, modesArgs, channelTag);
-    if (!user.isChannelOp(channelTag))
-        throw std::invalid_argument(Error::ERR_CHANOPRIVSNEEDED("localhost", user.nickname, channelTag));
+    user.canManageChannelModes(channelTag);
 }
 
 void ModeCommand::run(User &user, const std::string &args)
@@ -428,15 +429,15 @@ void ModeCommand::run(User &user, const std::string &args)
             ch->toggleMode(user, sign, 't');
             break;
         case 'b':
-            ch->toggleUserBanStatus(sign, modesArgs.front());
+            ch->toggleUserBanStatus(user, sign, modesArgs.front());
             modesArgs.pop();
             break;
         case 'o':
-            ch->toggleUserOpStatus(sign, modesArgs.front());
+            ch->toggleUserOpStatus(user, sign, modesArgs.front());
             modesArgs.pop();
             break;
         case 'v':
-            ch->toggleUserVoicedStatus(sign, modesArgs.front());
+            ch->toggleUserVoicedStatus(user, sign, modesArgs.front());
             modesArgs.pop();
             break;
         }
@@ -464,6 +465,7 @@ void PrivMsgCommand::validate(User &user, const std::string &args)
         throw std::invalid_argument(Error::ERR_NOSUCHNICK("localhost", user.nickname, p.first));
     if (p.first[0] != '#' && !context->isNickNameRegistred(p.first))
         throw std::invalid_argument(Error::ERR_NOSUCHNICK("localhost", user.nickname, p.first));
+    user.canSendPrivMessage(p.first);
 }
 
 void PrivMsgCommand::run(User &user, const std::string &args)

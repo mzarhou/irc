@@ -1,10 +1,10 @@
 #include "channel.hpp"
 
-Channel::Channel(Context *context, const std::string &tag) : context(context), tag(tag)
+Channel::Channel(Context *context, const std::string &tag) : context(context), tag(tag), modes("nt")
 {
 }
 
-Channel::Channel() : context(NULL), tag("")
+Channel::Channel() : context(NULL), tag(""), modes("nt")
 {
 }
 
@@ -13,7 +13,7 @@ Channel::~Channel()
     (void)context;
 }
 
-std::string Channel::getTag()
+std::string Channel::getTag() const
 {
     return this->tag;
 }
@@ -30,6 +30,18 @@ bool Channel::isUserOp(const User &user) const
 {
     REGISTRED_USERS_MAP::const_iterator opsIt = operators.find(user.fd);
     return (opsIt != operators.end());
+}
+
+bool Channel::isUserBanned(const User &user) const
+{
+    std::vector<std::string>::const_iterator it = std::find(bannedNicknames.begin(), bannedNicknames.end(), user.nickname);
+    return (it != bannedNicknames.end());
+}
+
+bool Channel::isUserVoiced(const User &user) const
+{
+    REGISTRED_USERS_MAP::const_iterator it = voicedUsers.find(user.fd);
+    return (it != voicedUsers.end());
 }
 
 std::string Channel::getUsersStr()
@@ -54,6 +66,11 @@ std::string Channel::getUsersStr()
     return usersStr;
 }
 
+bool Channel::checkLimit() const
+{
+    return (!isLimited() || limit > users.size());
+}
+
 void Channel::addNewUser(RegistredUser &user)
 {
     if (this->empty())
@@ -62,9 +79,9 @@ void Channel::addNewUser(RegistredUser &user)
     std::cout << "channel " << tag << ": " << users.size() << std::endl;
 }
 
-bool Channel::hasUser(const User &user)
+bool Channel::hasUser(const User &user) const
 {
-    REGISTRED_USERS_MAP::iterator it = users.find(user.fd);
+    REGISTRED_USERS_MAP::const_iterator it = users.find(user.fd);
     return (it != users.end());
 }
 
@@ -72,6 +89,7 @@ void Channel::kickUser(const User &user)
 {
     users.erase(user.fd);
     operators.erase(user.fd);
+    voicedUsers.erase(user.fd);
     if (this->empty())
         context->deleteChannel(*this);
     std::cout << "channel " << tag << ": " << users.size() << std::endl;
@@ -83,32 +101,32 @@ REGISTRED_USERS_MAP Channel::getUsers()
 }
 
 // check modes
-bool Channel::isInviteOnly()
+bool Channel::isInviteOnly() const
 {
     return strIncludes(modes, 'i');
 }
 
-bool Channel::everyOneCanChangeTopic()
+bool Channel::everyOneCanChangeTopic() const
 {
     return !strIncludes(modes, 't');
 }
 
-bool Channel::externalMsgsAllowed()
+bool Channel::externalMsgsAllowed() const
 {
     return !strIncludes(modes, 'n');
 }
 
-bool Channel::moderated()
+bool Channel::moderated() const
 {
     return strIncludes(modes, 'm');
 }
 
-bool Channel::isLimited()
+bool Channel::isLimited() const
 {
     return strIncludes(modes, 'l');
 }
 
-std::string Channel::getModes()
+std::string Channel::getModes() const
 {
     std::ostringstream oss;
     oss << '+' << modes;
@@ -169,22 +187,68 @@ void Channel::toggleLimit(const User &user, char sign, const std::string &limitS
 }
 
 // user specific modes
-void Channel::toggleUserBanStatus(char sign, const std::string &targetNickname)
+
+void Channel::broadcastToggleUserMessage(const User &user, char sign, const std::string &targetNickname, char mode)
 {
-    (void)sign;
-    (void)targetNickname;
+    std::ostringstream oss;
+
+    oss << user.getMsgPrefix() << " MODE " << this->getTag() << " " << sign << mode
+        << " " << targetNickname << "!*@*\n";
+    this->broadcast(oss.str());
 }
 
-void Channel::toggleUserVoicedStatus(char sign, const std::string &targetNickname)
+void Channel::toggleUserBanStatus(const User &user, char sign, const std::string &targetNickname)
 {
-    (void)sign;
-    (void)targetNickname;
+    std::vector<std::string>::iterator it = std::find(bannedNicknames.begin(), bannedNicknames.end(), targetNickname);
+    if (it == bannedNicknames.end())
+        this->broadcastToggleUserMessage(user, sign, targetNickname, 'b');
+    if (sign == '+')
+    {
+        if (it != bannedNicknames.end())
+            return;
+        bannedNicknames.push_back(targetNickname);
+        RegistredUser *user = context->findRegistredUserByNickname(targetNickname);
+        if (user)
+            this->kickUser(*user);
+    }
+    else
+    {
+        bannedNicknames.erase(it);
+    }
 }
 
-void Channel::toggleUserOpStatus(char sign, const std::string &targetNickname)
+void Channel::toggleUserVoicedStatus(const User &user, char sign, const std::string &targetNickname)
 {
-    (void)sign;
-    (void)targetNickname;
+    RegistredUser *targetUser = context->findRegistredUserByNickname(targetNickname);
+    if (!targetUser)
+        return;
+
+    if (sign == '+')
+    {
+        voicedUsers[targetUser->fd] = *targetUser;
+    }
+    else
+    {
+        voicedUsers.erase(targetUser->fd);
+    }
+    this->broadcastToggleUserMessage(user, sign, targetNickname, 'v');
+}
+
+void Channel::toggleUserOpStatus(const User &user, char sign, const std::string &targetNickname)
+{
+    RegistredUser *targetUser = context->findRegistredUserByNickname(targetNickname);
+    if (!targetUser)
+        return;
+
+    if (sign == '+')
+    {
+        operators[targetUser->fd] = *targetUser;
+    }
+    else
+    {
+        operators.erase(targetUser->fd);
+    }
+    this->broadcastToggleUserMessage(user, sign, targetNickname, 'o');
 }
 
 /**
