@@ -40,7 +40,7 @@ void User::canSendPrivMessage(const std::string &validChannelTagOrNickname)
     }
 }
 
-void User::canJoinChannel(const Channel &ch)
+void User::canJoinChannel(const Channel &ch, const std::string &key)
 {
     std::ostringstream oss;
 
@@ -57,6 +57,12 @@ void User::canJoinChannel(const Channel &ch)
         throw std::invalid_argument(oss.str());
     }
 
+    if (ch.requireAuth() && key != ch.getKey())
+    {
+        oss << 475 << " " << this->nickname << " " << ch.getTag() << " :Cannot join channel (+k) - bad key\n";
+        throw std::invalid_argument(oss.str());
+    }
+
     if (!ch.checkLimit())
     {
         oss << 471 << " " << this->nickname << " " << ch.getTag() << " :Cannot join channel (+l) - channel is full, try again later\n";
@@ -64,12 +70,12 @@ void User::canJoinChannel(const Channel &ch)
     }
 }
 
-void User::canJoinChannel(const std::string &channelTag)
+void User::canJoinChannel(const std::string &channelTag, const std::string &key)
 {
     Channel *ch = context->getChannel(channelTag);
     if (!ch)
         return;
-    return this->canJoinChannel(*ch);
+    return this->canJoinChannel(*ch, key);
 }
 
 bool User::isRegistred()

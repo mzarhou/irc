@@ -100,6 +100,11 @@ REGISTRED_USERS_MAP Channel::getUsers()
     return this->users;
 }
 
+std::string Channel::getKey() const
+{
+    return this->key;
+}
+
 // check modes
 bool Channel::isInviteOnly() const
 {
@@ -123,34 +128,41 @@ bool Channel::moderated() const
 
 bool Channel::isLimited() const
 {
-    return strIncludes(modes, 'l');
+    return strIncludes(modesWithArgs, 'l');
 }
 
-std::string Channel::getModes() const
+bool Channel::requireAuth() const
+{
+    return strIncludes(modesWithArgs, 'k');
+}
+
+std::string Channel::getModes(const User &user) const
 {
     std::ostringstream oss;
-    oss << '+' << modes;
+    oss << '+' << modes << modesWithArgs;
+    if (!this->hasUser(user))
+        return (oss.str());
     if (this->isLimited())
         oss << ' ' << limit;
+    if (this->requireAuth())
+        oss << ' ' << key;
     return (oss.str());
 }
 
 // channel specific modes
-void Channel::toggleMode(const User &user, char sign, char mode)
+bool Channel::toggleChar(std::string &modes, char sign, char mode)
 {
     if (sign == '+' && strIncludes(modes, mode))
-        return;
+        return false;
     if (sign == '-' && !strIncludes(modes, mode))
-        return;
+        return false;
 
-    if (sign == '+' && mode == 'l')
-        modes += 'l';
-    else if (sign == '+')
+    if (sign == '+')
     {
         size_t pos = 0;
         for (; pos < modes.length(); pos++)
         {
-            if (modes[pos] == 'l' || modes[pos] > mode)
+            if (modes[pos] > mode)
                 break;
         }
         modes.insert(pos, 1, mode);
@@ -159,30 +171,65 @@ void Channel::toggleMode(const User &user, char sign, char mode)
     {
         removeChar(modes, mode);
     }
+    return true;
+}
 
+void Channel::toggleMode(const User &user, char sign, char mode)
+{
+    if (!this->toggleChar(modes, sign, mode))
+    {
+        return;
+    }
     std::ostringstream oss;
-    oss << user.getMsgPrefix() << " MODE " << this->getTag() << " " << sign << mode;
-    if (mode == 'l')
-        oss << " " << limit;
-    oss << std::endl;
+    oss << user.getMsgPrefix() << " MODE " << this->getTag() << " " << sign << mode << std::endl;
     this->broadcast(oss.str());
+}
+
+void Channel::toggleModeWithArgs(const User &user, char sign, char mode, bool isSameArg)
+{
+    bool isToggled = this->toggleChar(modesWithArgs, sign, mode);
+    std::ostringstream oss;
+    oss << user.getMsgPrefix() << " MODE " << this->getTag() << " " << sign << mode << " ";
+    if (mode == 'l')
+        oss << limit;
+    if (mode == 'k')
+        oss << key;
+    oss << std::endl;
+    if (isToggled || !isSameArg)
+        this->broadcast(oss.str());
 }
 
 void Channel::toggleLimit(const User &user, char sign, const std::string &limitStr)
 {
     if (sign == '-')
-        return this->toggleMode(user, sign, 'l');
+        return this->toggleModeWithArgs(user, sign, 'l', true);
     try
     {
         int limit = std::stoi(limitStr);
         if (limit <= 0)
-            return;
+            throw std::invalid_argument("invalid limit number");
+        bool isSameArg = ((int)this->limit == limit);
         this->limit = limit;
-        this->toggleMode(user, sign, 'l');
+        this->toggleModeWithArgs(user, sign, 'l', isSameArg);
     }
     catch (const std::exception &e)
     {
         std::cerr << e.what() << '\n';
+    }
+}
+
+void Channel::toggleKey(const User &user, char sign, const std::string &validKey)
+{
+    if (sign == '-' && !this->requireAuth())
+        return;
+    if (sign == '+')
+    {
+        this->toggleModeWithArgs(user, sign, 'k', key == validKey);
+        key = validKey;
+    }
+    else if (validKey == key)
+    {
+        this->toggleModeWithArgs(user, sign, 'k', true);
     }
 }
 

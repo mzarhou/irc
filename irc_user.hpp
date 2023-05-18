@@ -32,8 +32,8 @@ public: // constructors
     virtual ~User();
 
     // policy
-    void canJoinChannel(const Channel &ch);
-    void canJoinChannel(const std::string &chTag);
+    void canJoinChannel(const Channel &ch, const std::string &key);
+    void canJoinChannel(const std::string &channelTag, const std::string &key);
     void canSendPrivMessage(const std::string &channelTagOrNickname);
     void canManageChannelModes(const Channel &ch);
     void canManageChannelModes(const std::string &channelTagOrNickname);

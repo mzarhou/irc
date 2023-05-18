@@ -16,14 +16,18 @@ private:
 
     // channel modes
     std::string modes;
+    std::string modesWithArgs;
     std::vector<std::string> bannedNicknames;
     REGISTRED_USERS_MAP voicedUsers;
     REGISTRED_USERS_MAP operators;
     size_t limit;
+    std::string key;
 
 private:
     bool empty();
     void broadcastToggleUserMessage(const User &user, char sign, const std::string &targetNickname, char mode);
+    bool toggleChar(std::string &modes, char sign, char mode);
+    void toggleModeWithArgs(const User &user, char sign, char mode, bool isSameArg);
 
 public:
     Channel();
@@ -36,6 +40,8 @@ public:
     bool isUserBanned(const User &user) const;
     bool isUserVoiced(const User &user) const;
     std::string getUsersStr();
+
+    std::string getKey() const;
 
     void addNewUser(RegistredUser &user);
     std::string getTag() const;
@@ -50,11 +56,13 @@ public:
     bool externalMsgsAllowed() const;
     bool moderated() const;
     bool isLimited() const;
+    bool requireAuth() const;
 
     // channel specific modes
-    std::string getModes() const;
+    std::string getModes(const User &user) const;
     void toggleMode(const User &user, char sign, char mode);
     void toggleLimit(const User &user, char sign, const std::string &limit);
+    void toggleKey(const User &user, char sign, const std::string &key);
 
     // user specific modes
     void toggleUserBanStatus(const User &user, char sign, const std::string &targetNickname);

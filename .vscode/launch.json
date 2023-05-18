@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "Debug",
             "program": "ircserv",
-            "args": ["6667", "passw"],
+            "args": ["6667", "test"],
         }
     ]
 }
