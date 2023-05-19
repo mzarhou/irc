@@ -128,4 +128,12 @@ public:
     void validate(User &user, const std::string &args);
     void run(User &user, const std::string &args);
 };
+
+class InviteCommand : public CmdHandler
+{
+public:
+    InviteCommand(Context *context);
+    void validate(User &user, const std::string &args);
+    void run(User &user, const std::string &args);
+};
 #endif

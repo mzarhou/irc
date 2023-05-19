@@ -20,6 +20,7 @@ private:
     std::vector<std::string> bannedNicknames;
     REGISTRED_USERS_MAP voicedUsers;
     REGISTRED_USERS_MAP operators;
+    REGISTRED_USERS_MAP invitedUsers;
     size_t limit;
     std::string key;
 
@@ -39,11 +40,13 @@ public:
     bool isUserOp(const User &user) const;
     bool isUserBanned(const User &user) const;
     bool isUserVoiced(const User &user) const;
+    bool isUserInvited(const User &user) const;
     std::string getUsersStr();
 
     std::string getKey() const;
 
     void addNewUser(RegistredUser &user);
+    void inviteUser(RegistredUser &user);
     std::string getTag() const;
     bool hasUser(const User &user) const;
     void kickUser(const User &user);

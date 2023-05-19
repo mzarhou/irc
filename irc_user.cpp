@@ -24,6 +24,20 @@ void User::canManageChannelModes(const std::string &validChannelTag)
     this->canManageChannelModes(*ch);
 }
 
+void User::canInviteUsers(const Channel &ch)
+{
+    if (!this->isChannelOp(ch))
+        throw std::invalid_argument(Error::ERR_CHANOPRIVSNEEDED("localhost", this->nickname, ch.getTag()));
+}
+
+void User::canInviteUsers(const std::string &validChannelTag)
+{
+    Channel *ch = context->getChannel(validChannelTag);
+    if (!ch)
+        return;
+    this->canInviteUsers(*ch);
+}
+
 void User::canSendPrivMessage(const std::string &validChannelTagOrNickname)
 {
     if (validChannelTagOrNickname.empty() || validChannelTagOrNickname[0] != '#')
@@ -40,12 +54,12 @@ void User::canSendPrivMessage(const std::string &validChannelTagOrNickname)
     }
 }
 
-void User::canJoinChannel(const Channel &ch, const std::string &key)
+void User::canJoinChannel(const User &user, const Channel &ch, const std::string &key)
 {
     std::ostringstream oss;
 
     oss << "localhost ";
-    if (ch.isInviteOnly())
+    if (ch.isInviteOnly() && !ch.isUserInvited(user))
     {
         oss << 473 << " " << this->nickname << " " << ch.getTag() << " :Cannot join channel (+i) - you must be invited\n";
         throw std::invalid_argument(oss.str());
@@ -70,12 +84,12 @@ void User::canJoinChannel(const Channel &ch, const std::string &key)
     }
 }
 
-void User::canJoinChannel(const std::string &channelTag, const std::string &key)
+void User::canJoinChannel(const User &user, const std::string &channelTag, const std::string &key)
 {
     Channel *ch = context->getChannel(channelTag);
     if (!ch)
         return;
-    return this->canJoinChannel(*ch, key);
+    return this->canJoinChannel(user, *ch, key);
 }
 
 bool User::isRegistred()
