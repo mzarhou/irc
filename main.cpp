@@ -204,21 +204,30 @@ int main(int argc, char **argv)
                 }
                 else
                 {
+                    User *user = context.getSocketHandler(client_fd);
+
                     buffer[nb_bytes] = 0;
+                    std::string message(buffer);
 
-                    std::istringstream ss(buffer);
-                    std::string message;
-                    while (std::getline(ss, message, '\n'))
+                    size_t pos = message.find_last_of("\n");
+                    if (pos != std::string::npos)
                     {
-                        // TODO: handle multipart message ^D
-                        Command cmd = Command::fromMessage(message);
-                        User *user = context.getSocketHandler(client_fd);
-                        user->handleSocket(cmd);
-                    }
+                        user->buffer += message.substr(0, pos);
+                        std::queue<std::string> q = splitChunks(user->buffer, '\n');
+                        user->buffer = message.substr(pos + 1);
 
-                    // PASS 123
-                    // NICK mzarhou_nickname
-                    // USER mzarhou_username 0 * mzarhou_realname
+                        while (!q.empty())
+                        {
+                            message = q.front();
+                            q.pop();
+                            Command cmd = Command::fromMessage(message);
+                            user->handleSocket(cmd);
+                        }
+                    }
+                    else
+                    {
+                        user->buffer += message;
+                    }
                 }
             }
         }

@@ -24,6 +24,7 @@ public:
     std::string realname;
     std::string username;
     std::string password;
+    std::string buffer;
 
 public: // constructors
     User(Context *context, int sockfd);

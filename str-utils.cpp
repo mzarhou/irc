@@ -31,8 +31,6 @@ std::string trim(const std::string &str)
 std::string upperFirstWord(const char *message)
 {
     std::string str(message);
-    // str.erase(str.find_last_not_of("\n") + 1);
-    // str.erase(str.find_last_not_of("\r") + 1);
     for (size_t i = 0; i < str.length() && str[i] != ' '; i++)
     {
         str[i] = toupper(str[i]);
@@ -53,7 +51,7 @@ std::pair<std::string, std::string> split(const std::string &str, char splitBy)
     size_t npos = str.find_first_of(splitBy);
     if (npos == std::string::npos)
         return std::make_pair(str, "");
-    return std::make_pair(str.substr(0, npos), trim(str.substr(npos)));
+    return std::make_pair(str.substr(0, npos), trim(str.substr(npos + 1)));
 }
 
 std::queue<std::string> splitChunks(const std::string &str, char splitBy)
