@@ -3,7 +3,7 @@
 /**
  * User
  */
-User::User(Context *context, int sockfd) : context(context), fd(sockfd), nickname(""), username(""){};
+User::User(Context *context, int sockfd) : context(context), fd(sockfd), nickname(""), username(""), buffer(""){};
 
 User::User(const User &other)
 {
