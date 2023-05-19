@@ -24,6 +24,15 @@ void User::canManageChannelModes(const std::string &validChannelTag)
     this->canManageChannelModes(*ch);
 }
 
+void User::canManageChannelTopic(const std::string &channelTag, bool isEditingTopic)
+{
+    Channel *ch = context->getChannel(channelTag);
+    if (!ch)
+        return;
+    if (isEditingTopic && !this->isChannelOp(*ch))
+        throw std::invalid_argument(Error::ERR_CHANOPRIVSNEEDED("localhost", this->nickname, ch->getTag()));
+}
+
 void User::canInviteUsers(const Channel &ch)
 {
     if (!this->isChannelOp(ch))

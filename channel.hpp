@@ -13,6 +13,7 @@ private:
     Context *context;
     std::string tag;
     REGISTRED_USERS_MAP users;
+    std::string topic;
 
     // channel modes
     std::string modes;
@@ -44,6 +45,9 @@ public:
     std::string getUsersStr();
 
     std::string getKey() const;
+    std::string getTopic() const;
+    void setTopic(const std::string &str);
+    bool hasTopic();
 
     void addNewUser(RegistredUser &user);
     void inviteUser(RegistredUser &user);
