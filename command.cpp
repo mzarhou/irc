@@ -665,3 +665,94 @@ void TopicCommand::run(User &user, const std::string &args)
         ch->broadcast(oss.str());
     }
 }
+
+/**
+ * KICK COMMAND
+ */
+KickCommand::KickCommand(Context *context)
+    : CmdHandler(context)
+{
+}
+
+int numberOfParam(std::string str)
+{
+    std::istringstream ss(str);
+    std::string token;
+    int i = 0;
+    while (std::getline(ss, token, ' '))
+    {
+        i++;
+    }
+    return (i);
+}
+
+void KickCommand::validate(User &user, const std::string &args)
+{
+    std::istringstream ss(args);
+    std::string token, channel;
+    Channel *ch;
+    RegistredUser *us;
+    int i = 0;
+    int nb_param = numberOfParam(args);
+    if (nb_param < 2)
+        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
+    while (std::getline(ss, token, ' '))
+    {
+        if (i == 0)
+        {
+            if (token.substr(0, 1) == "#")
+            {
+                if (!context->isChannelExist(token))
+                    throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, token));
+                if (!user.isChannelOp(token)) // user.isChannelOp(ch->getTag())
+                {
+                    std::cout << "debug\n";
+
+                    throw std::invalid_argument(Error::ERR_CHANOPRIVSNEEDED("localhost", user.nickname, token));
+                }
+                channel = token;
+            }
+            else
+                throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, token));
+        }
+        if (i == 1)
+        {
+            if (!context->isNickNameRegistred(token))
+                throw std::invalid_argument(Error::ERR_NOSUCHNICK("localhost", token, user.nickname));
+            ch = context->getChannel(channel);
+            us = context->findRegistredUserByNickname(token);
+            if (!ch->hasUser(user))
+                throw std::invalid_argument(Error::ERR_NOTONCHANNEL("localhost", token, channel));
+            if (!ch->hasUser(*us))
+                throw std::invalid_argument(Error::ERR_USERNOTINCHANNEL("localhost", user.nickname, token, channel));
+        }
+        i++;
+    }
+    std::cout << "KICK A CLIENT FROM THE CHANNEL" << std::endl;
+}
+
+void KickCommand::run(User &user, const std::string &args)
+{
+    std::istringstream ss(args);
+    std::ostringstream oss;
+    RegistredUser *us;
+    std::string token;
+    Channel *ch;
+    int i = 0;
+    while (std::getline(ss, token, ' '))
+    {
+        if (i == 0)
+        {
+            ch = context->getChannel(token);
+        }
+        if (i == 1)
+        {
+            us = context->findRegistredUserByNickname(token);
+            ch->kickUser(*us);
+            oss << user.getMsgPrefix() << " KICK " << ch->getTag() << " " << token << '\n';
+            // user.send(oss.str());
+            ch->broadcast(oss.str());
+        }
+        i++;
+    }
+}
