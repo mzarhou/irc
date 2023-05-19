@@ -223,7 +223,7 @@ void JoinCommand::validate(User &user, const std::string &args)
         throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, tag));
     if (user.isJoinedChannel(tag))
         throw std::invalid_argument("");
-    user.canJoinChannel(tag, key);
+    user.canJoinChannel(user, tag, key);
 }
 
 void JoinCommand::run(User &user, const std::string &args)
@@ -564,4 +564,55 @@ void QuitCommand::run(User &user, const std::string &args)
     // TODO: change 127.0.0.1 with user ip
     user.send("ERROR :Closing Link: 127.0.0.1 (Client Quit)\n");
     context->disconnectUser(user.fd);
+}
+
+/**
+ * INVITE COMMAND
+ */
+InviteCommand::InviteCommand(Context *context)
+    : CmdHandler(context)
+{
+}
+
+void InviteCommand::validate(User &user, const std::string &args)
+{
+    std::queue<std::string> q = splitChunks(args, ' ');
+    if (q.size() < 2)
+        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
+    std::string targetNickname = q.front();
+    q.pop();
+    std::string channelTag = q.front();
+    q.pop();
+
+    if (!context->isNickNameRegistred(targetNickname))
+        throw std::invalid_argument(Error::ERR_NOSUCHNICK("localhost", user.nickname, targetNickname));
+    if (!context->isChannelExist(channelTag))
+        throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, channelTag));
+    user.canInviteUsers(channelTag);
+}
+
+void InviteCommand::run(User &user, const std::string &args)
+{
+    std::queue<std::string> q = splitChunks(args, ' ');
+    std::string targetNickname = q.front();
+    q.pop();
+    std::string channelTag = q.front();
+    q.pop();
+
+    Channel *ch = context->getChannel(channelTag);
+    RegistredUser *targetUser = context->findRegistredUserByNickname(targetNickname);
+    if (!ch || !targetUser)
+        return;
+
+    ch->inviteUser(*targetUser);
+
+    {
+        std::ostringstream oss;
+        oss << ":localhost " << 341 << " " << user.nickname << " " << targetNickname << " " << ch->getTag() << std::endl;
+        user.send(oss.str());
+    }
+
+    std::ostringstream oss;
+    oss << user.getMsgPrefix() << " INVITE " << targetNickname << " :" << channelTag << std::endl;
+    targetUser->send(oss.str());
 }

@@ -44,6 +44,12 @@ bool Channel::isUserVoiced(const User &user) const
     return (it != voicedUsers.end());
 }
 
+bool Channel::isUserInvited(const User &user) const
+{
+    REGISTRED_USERS_MAP::const_iterator it = invitedUsers.find(user.fd);
+    return (it != invitedUsers.end());
+}
+
 std::string Channel::getUsersStr()
 {
     std::string usersStr = "";
@@ -79,6 +85,11 @@ void Channel::addNewUser(RegistredUser &user)
     std::cout << "channel " << tag << ": " << users.size() << std::endl;
 }
 
+void Channel::inviteUser(RegistredUser &user)
+{
+    invitedUsers[user.fd] = user;
+}
+
 bool Channel::hasUser(const User &user) const
 {
     REGISTRED_USERS_MAP::const_iterator it = users.find(user.fd);
@@ -90,6 +101,7 @@ void Channel::kickUser(const User &user)
     users.erase(user.fd);
     operators.erase(user.fd);
     voicedUsers.erase(user.fd);
+    invitedUsers.erase(user.fd);
     if (this->empty())
         context->deleteChannel(*this);
     std::cout << "channel " << tag << ": " << users.size() << std::endl;
