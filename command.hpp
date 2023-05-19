@@ -136,4 +136,12 @@ public:
     void validate(User &user, const std::string &args);
     void run(User &user, const std::string &args);
 };
+
+class TopicCommand : public CmdHandler
+{
+public:
+    TopicCommand(Context *context);
+    void validate(User &user, const std::string &args);
+    void run(User &user, const std::string &args);
+};
 #endif

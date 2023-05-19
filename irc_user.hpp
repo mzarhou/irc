@@ -37,6 +37,7 @@ public: // constructors
     void canSendPrivMessage(const std::string &channelTagOrNickname);
     void canManageChannelModes(const Channel &ch);
     void canManageChannelModes(const std::string &channelTagOrNickname);
+    void canManageChannelTopic(const std::string &channelTag, bool isEditingTopic);
     void canInviteUsers(const std::string &channelTag);
     void canInviteUsers(const Channel &ch);
 

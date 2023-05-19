@@ -14,6 +14,7 @@ Context::Context(const std::string passw) : serverpassw(passw)
     this->registerCommand("PRIVMSG", new PrivMsgCommand(this));
     this->registerCommand("QUIT", new QuitCommand(this));
     this->registerCommand("INVITE", new InviteCommand(this));
+    this->registerCommand("TOPIC", new TopicCommand(this));
 }
 
 Context::~Context()

@@ -1,10 +1,10 @@
 #include "channel.hpp"
 
-Channel::Channel(Context *context, const std::string &tag) : context(context), tag(tag), modes("nt")
+Channel::Channel(Context *context, const std::string &tag) : context(context), tag(tag), topic(""), modes("nt")
 {
 }
 
-Channel::Channel() : context(NULL), tag(""), modes("nt")
+Channel::Channel() : context(NULL), tag(""), topic(""), modes("nt")
 {
 }
 
@@ -115,6 +115,21 @@ REGISTRED_USERS_MAP Channel::getUsers()
 std::string Channel::getKey() const
 {
     return this->key;
+}
+
+std::string Channel::getTopic() const
+{
+    return this->topic;
+}
+
+void Channel::setTopic(const std::string &newTopic)
+{
+    this->topic = newTopic;
+}
+
+bool Channel::hasTopic()
+{
+    return !this->topic.empty();
 }
 
 // check modes

@@ -616,3 +616,52 @@ void InviteCommand::run(User &user, const std::string &args)
     oss << user.getMsgPrefix() << " INVITE " << targetNickname << " :" << channelTag << std::endl;
     targetUser->send(oss.str());
 }
+
+/**
+ * TOPIC COMMAND
+ */
+TopicCommand::TopicCommand(Context *context)
+    : CmdHandler(context)
+{
+}
+
+void TopicCommand::validate(User &user, const std::string &args)
+{
+    std::pair<std::string, std::string> p = split(args, ' ');
+    std::string channelTag = p.first;
+    if (channelTag.empty())
+        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
+    if (!context->isChannelExist(channelTag))
+        throw std::invalid_argument(Error::ERR_NOSUCHNICK("localhost", user.nickname, p.first));
+    user.canManageChannelTopic(channelTag, !p.second.empty());
+}
+
+void TopicCommand::run(User &user, const std::string &args)
+{
+    std::ostringstream oss;
+    std::pair<std::string, std::string> p = split(args, ' ');
+    std::string channelTag = p.first;
+    Channel *ch = context->getChannel(channelTag);
+    if (!ch)
+        return;
+    if (p.second.empty())
+    {
+        if (ch->hasTopic())
+            oss << ":localhost 332 " << user.nickname << " " << ch->getTag() << " :" << ch->getTopic() << std::endl;
+        else
+            oss << ":localhost 331 " << user.nickname << " " << ch->getTag() << " :No topic is set." << std::endl;
+        user.send(oss.str());
+    }
+    else if (p.second == ":")
+    {
+        ch->setTopic("");
+        oss << user.getMsgPrefix() << " TOPIC " << ch->getTag() << " :" << ch->getTopic() << std::endl;
+    }
+    else
+    {
+        std::string newTopic = p.second[0] == ':' ? p.second.substr(1) : getFirstWord(p.second.c_str());
+        ch->setTopic(newTopic);
+        oss << user.getMsgPrefix() << " TOPIC " << ch->getTag() << " :" << ch->getTopic() << std::endl;
+        ch->broadcast(oss.str());
+    }
+}
