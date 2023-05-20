@@ -19,6 +19,7 @@ struct Error
 {
     static std::string ERR_NEEDMOREPARAMS(const std::string &serverHost, const std::string &nickname)
     {
+        // todo optimaz for kick also
         std::ostringstream oss;
         oss << ":" << serverHost << " 461 " << nickname << " JOIN :Not enough parameters\n";
         return oss.str();
@@ -65,6 +66,12 @@ struct Error
     {
         std::ostringstream oss;
         oss << ":" << serverHost << " 441 " << nickname << " " << targetNickname << " " << channel << " :They aren't on that channel\n";
+        return oss.str();
+    }
+    static std::string ERR_NOTONCHANNEL(const std::string &serverHost, const std::string &client, const std::string &channel)
+    {
+        std::ostringstream oss;
+        oss << ":" << serverHost << " 442 " << client << " " << channel << " :You're not on that channel\n";
         return oss.str();
     }
 };
