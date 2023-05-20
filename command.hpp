@@ -76,14 +76,6 @@ public:
     void run(User &user, const std::string &args);
 };
 
-class ListCommand : public CmdHandler
-{
-public:
-    ListCommand(Context *context);
-    void validate(User &user, const std::string &args);
-    void run(User &user, const std::string &args);
-};
-
 class JoinCommand : public CmdHandler
 {
 public:
