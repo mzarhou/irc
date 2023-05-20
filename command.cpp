@@ -155,26 +155,6 @@ void NickCommand::run(User &user, const std::string &newNickname)
 }
 
 /**
- * LIST COMMAND
- */
-ListCommand::ListCommand(Context *context)
-    : CmdHandler(context)
-{
-}
-
-void ListCommand::validate(User &user, const std::string &args)
-{
-    (void)user;
-    (void)args;
-}
-
-void ListCommand::run(User &user, const std::string &args)
-{
-    (void)user;
-    (void)args;
-}
-
-/**
  * JOIN COMMAND
  */
 JoinCommand::JoinCommand(Context *context)
