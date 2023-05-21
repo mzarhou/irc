@@ -19,7 +19,6 @@ struct Error
 {
     static std::string ERR_NEEDMOREPARAMS(const std::string &serverHost, const std::string &nickname, const std::string &commandName)
     {
-        // todo optimaz for kick also
         std::ostringstream oss;
         oss << ":" << serverHost << " 461 " << nickname << " " << commandName << " :Not enough parameters\n";
         return oss.str();
