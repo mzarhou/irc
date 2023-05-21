@@ -3,7 +3,10 @@
 /**
  * User
  */
-User::User(Context *context, int sockfd) : context(context), fd(sockfd), nickname(""), username(""), buffer(""){};
+User::User(Context *context, int sockfd, const std::string &ip)
+    : context(context), fd(sockfd), nickname(""), username(""), buffer(""), ip(ip)
+{
+}
 
 User::User(const User &other)
 {
@@ -13,7 +16,7 @@ User::User(const User &other)
 void User::canManageChannelModes(const Channel &ch)
 {
     if (!this->isChannelOp(ch))
-        throw std::invalid_argument(Error::ERR_CHANOPRIVSNEEDED("localhost", this->nickname, ch.getTag()));
+        throw std::invalid_argument(Error::ERR_CHANOPRIVSNEEDED(Server::getHostname(), this->nickname, ch.getTag()));
 }
 
 void User::canManageChannelModes(const std::string &validChannelTag)
@@ -30,13 +33,13 @@ void User::canManageChannelTopic(const std::string &channelTag, bool isEditingTo
     if (!ch)
         return;
     if (isEditingTopic && !this->isChannelOp(*ch))
-        throw std::invalid_argument(Error::ERR_CHANOPRIVSNEEDED("localhost", this->nickname, ch->getTag()));
+        throw std::invalid_argument(Error::ERR_CHANOPRIVSNEEDED(Server::getHostname(), this->nickname, ch->getTag()));
 }
 
 void User::canInviteUsers(const Channel &ch)
 {
     if (!this->isChannelOp(ch))
-        throw std::invalid_argument(Error::ERR_CHANOPRIVSNEEDED("localhost", this->nickname, ch.getTag()));
+        throw std::invalid_argument(Error::ERR_CHANOPRIVSNEEDED(Server::getHostname(), this->nickname, ch.getTag()));
 }
 
 void User::canInviteUsers(const std::string &validChannelTag)
@@ -58,7 +61,7 @@ void User::canSendPrivMessage(const std::string &validChannelTagOrNickname)
     if (ch->moderated() || (!ch->hasUser(*this) && !ch->externalMsgsAllowed()))
     {
         std::ostringstream oss;
-        oss << ":localhost " << 404 << " " << this->nickname << " " << ch->getTag() << " :Cannot send to nick/channel\n";
+        oss << ":" << Server::getHostname() << " " << 404 << " " << this->nickname << " " << ch->getTag() << " :Cannot send to nick/channel\n";
         throw std::invalid_argument(oss.str());
     }
 }
@@ -67,7 +70,7 @@ void User::canJoinChannel(const User &user, const Channel &ch, const std::string
 {
     std::ostringstream oss;
 
-    oss << "localhost ";
+    oss << ":" << Server::getHostname() << " ";
     if (ch.isInviteOnly() && !ch.isUserInvited(user))
     {
         oss << 473 << " " << this->nickname << " " << ch.getTag() << " :Cannot join channel (+i) - you must be invited\n";
@@ -174,8 +177,7 @@ std::vector<Channel *> User::channels()
 std::string User::getMsgPrefix() const
 {
     std::ostringstream oss;
-    // TODO: change localhost with user ip
-    oss << ":" << nickname << "!" << username << "@localhost";
+    oss << ":" << nickname << "!" << username << "@" << this->ip;
     return oss.str();
 }
 
@@ -204,8 +206,8 @@ void User::setPassword(const std::string &value)
 /**
  * GuestUser
  */
-GuestUser::GuestUser() : User(NULL, -1) {}
-GuestUser::GuestUser(Context *context, int sockfd) : User(context, sockfd) {}
+GuestUser::GuestUser() : User(NULL, -1, "") {}
+GuestUser::GuestUser(Context *context, int sockfd, const std::string &ip) : User(context, sockfd, ip) {}
 GuestUser::GuestUser(const GuestUser &other) : User(other)
 {
     *this = other;
@@ -228,7 +230,9 @@ void GuestUser::handleSocket(const Command &cmd)
     std::string *it = std::find(std::begin(cmds), std::end(cmds), cmd.name);
     if (it == std::end(cmds))
     {
-        this->send(":localhost 451 * LIST :You must finish connecting with another nickname first.\n");
+        std::ostringstream oss;
+        oss << ":" << Server::getHostname() << " 451 * LIST :You must finish connecting with another nickname first.\n";
+        this->send(oss.str());
     }
     else
     {
@@ -255,7 +259,7 @@ void GuestUser::onChange()
         return;
 
     std::ostringstream oss;
-    oss << ":localhost " << nickname << " :Welcome to the 1337.server.chat Internet Relay Chat Network " << nickname << '\n';
+    oss << ":" << Server::getHostname() << " " << nickname << " :Welcome to the 1337.server.chat Internet Relay Chat Network " << nickname << '\n';
     this->send(oss.str());
     context->registerUser(*this);
 }
@@ -263,8 +267,8 @@ void GuestUser::onChange()
 /**
  * RegistredUser
  */
-RegistredUser::RegistredUser() : User(NULL, -1) {}
-RegistredUser::RegistredUser(Context *context, int sockfd) : User(context, sockfd) {}
+RegistredUser::RegistredUser() : User(NULL, -1, "") {}
+RegistredUser::RegistredUser(Context *context, int sockfd, const std::string &ip) : User(context, sockfd, ip) {}
 RegistredUser::RegistredUser(const RegistredUser &other) : User(other)
 {
     *this = other;
@@ -279,7 +283,7 @@ void RegistredUser::handleSocket(const Command &cmd)
     if (!command)
     {
         std::ostringstream oss;
-        oss << ":localhost 421 " << nickname << " " << cmd.originalName << " :Unknown command\n";
+        oss << ": " << Server::getHostname() << " 421 " << nickname << " " << cmd.originalName << " :Unknown command\n";
         this->send(oss.str());
         return;
     }

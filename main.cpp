@@ -14,8 +14,8 @@ int main(int argc, char **argv)
 
     try
     {
-        Context context(password);
-        Server server(&context, port);
+        Context context;
+        Server server(&context, password, port);
         server.run();
     }
     catch (const std::exception &e)

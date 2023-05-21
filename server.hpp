@@ -29,6 +29,9 @@ private:
     std::vector<pollfd> pfds;
     int listener_sock;
 
+    static std::string hostname;
+    static std::string password;
+
 private:
     void *get_in_addr(struct sockaddr *sa);
     int get_listener_socket(const std::string &port);
@@ -39,9 +42,10 @@ private:
     void onNewMessage(int clientFd);
 
 public:
-    Server(Context *context, const std::string &port);
+    Server(Context *context, const std::string passw, const std::string &port);
     void run();
 
+    static std::string getHostname();
     static std::string getPassword();
 };
 
