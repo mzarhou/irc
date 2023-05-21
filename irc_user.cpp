@@ -3,7 +3,10 @@
 /**
  * User
  */
-User::User(Context *context, int sockfd) : context(context), fd(sockfd), nickname(""), username(""), buffer(""){};
+User::User(Context *context, int sockfd, const std::string &ip)
+    : context(context), fd(sockfd), nickname(""), username(""), buffer(""), ip(ip)
+{
+}
 
 User::User(const User &other)
 {
@@ -174,8 +177,7 @@ std::vector<Channel *> User::channels()
 std::string User::getMsgPrefix() const
 {
     std::ostringstream oss;
-    // TODO: change localhost with user ip
-    oss << ":" << nickname << "!" << username << "@localhost";
+    oss << ":" << nickname << "!" << username << "@" << this->ip;
     return oss.str();
 }
 
@@ -204,8 +206,8 @@ void User::setPassword(const std::string &value)
 /**
  * GuestUser
  */
-GuestUser::GuestUser() : User(NULL, -1) {}
-GuestUser::GuestUser(Context *context, int sockfd) : User(context, sockfd) {}
+GuestUser::GuestUser() : User(NULL, -1, "") {}
+GuestUser::GuestUser(Context *context, int sockfd, const std::string &ip) : User(context, sockfd, ip) {}
 GuestUser::GuestUser(const GuestUser &other) : User(other)
 {
     *this = other;
@@ -263,8 +265,8 @@ void GuestUser::onChange()
 /**
  * RegistredUser
  */
-RegistredUser::RegistredUser() : User(NULL, -1) {}
-RegistredUser::RegistredUser(Context *context, int sockfd) : User(context, sockfd) {}
+RegistredUser::RegistredUser() : User(NULL, -1, "") {}
+RegistredUser::RegistredUser(Context *context, int sockfd, const std::string &ip) : User(context, sockfd, ip) {}
 RegistredUser::RegistredUser(const RegistredUser &other) : User(other)
 {
     *this = other;

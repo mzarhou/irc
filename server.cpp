@@ -1,10 +1,23 @@
 #include "server.hpp"
 
-Server::Server(Context *context, const std::string &port)
+std::string Server::hostname = "";
+std::string Server::password = "";
+
+Server::Server(Context *context, const std::string passw, const std::string &port)
     : context(context)
 {
-    listener_sock = get_listener_socket(port);
+    Server::password = passw;
 
+    char hostbuffer[256];
+    if (gethostname(hostbuffer, sizeof(hostbuffer)) == -1)
+    {
+        perror("gethostname");
+        exit(1);
+    }
+
+    Server::hostname = hostbuffer;
+
+    this->listener_sock = get_listener_socket(port);
     if (listener_sock < 0)
     {
         std::cerr << "failed getting listener socket" << std::endl;
@@ -102,6 +115,16 @@ void Server::del_from_pfds(int fdToDelete)
     pfds.erase(it);
 }
 
+std::string Server::getHostname()
+{
+    return Server::hostname;
+}
+
+std::string Server::getPassword()
+{
+    return Server::password;
+}
+
 void Server::onNewConnection()
 {
     struct sockaddr_storage client_addr;
@@ -123,7 +146,7 @@ void Server::onNewConnection()
             clientIP,
             INET6_ADDRSTRLEN);
         std::cout << "new connection from " << clientIP << " on socket " << newClientFd << std::endl;
-        context->addNewUser(newClientFd);
+        context->addNewUser(newClientFd, clientIP);
         // send a welcome message to the client
         std::string welcomeMsg = "Welcome to the server!\n";
         if (send(newClientFd, welcomeMsg.c_str(), welcomeMsg.length(), 0) == -1)

@@ -1,9 +1,8 @@
 #include "context.hpp"
 #include <unistd.h>
 
-Context::Context(const std::string passw) : serverpassw(passw)
+Context::Context()
 {
-    // TODO: add new commands here
     this->registerCommand("USER", new UserCommand(this));
     this->registerCommand("NICK", new NickCommand(this));
     this->registerCommand("PASS", new PassCommand(this));
@@ -33,9 +32,9 @@ void Context::registerCommand(const std::string &name, CmdHandler *handler)
     commands[name] = handler;
 }
 
-void Context::addNewUser(int sockfd)
+void Context::addNewUser(int sockfd, const std::string &ip)
 {
-    GuestUser new_user(this, sockfd);
+    GuestUser new_user(this, sockfd, ip);
     guest_users[sockfd] = new_user;
 }
 
@@ -149,18 +148,13 @@ void Context::registerUser(GuestUser &user)
     std::cout << "registring new user " << user.nickname << std::endl;
     guest_users.erase(user.fd);
 
-    RegistredUser ruser(this, user.fd);
+    RegistredUser ruser(this, user.fd, user.ip);
     ruser.setNickname(user.nickname);
     ruser.setRealname(user.realname);
     ruser.setUsername(user.username);
     ruser.setPassword(user.password);
 
     registred_users[user.fd] = ruser;
-}
-
-std::string Context::getServerpassw(void)
-{
-    return (this->serverpassw);
 }
 
 Channel &Context::createNewChannel(const std::string &tag)

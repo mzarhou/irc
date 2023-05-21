@@ -25,9 +25,10 @@ public:
     std::string username;
     std::string password;
     std::string buffer;
+    std::string ip;
 
 public: // constructors
-    User(Context *context, int sockfd);
+    User(Context *context, int sockfd, const std::string &ip);
     User(const User &other);
     // User &operator=(const User &other);
     virtual ~User();
@@ -65,7 +66,7 @@ class GuestUser : public User
 {
 public: // constructors
     GuestUser();
-    GuestUser(Context *context, int sockfd);
+    GuestUser(Context *context, int sockfd, const std::string &ip);
     GuestUser(const GuestUser &other);
     // GuestUser &operator=(const GuestUser &other);
     ~GuestUser();
@@ -81,7 +82,7 @@ class RegistredUser : public User
 {
 public:
     RegistredUser();
-    RegistredUser(Context *context, int sockfd);
+    RegistredUser(Context *context, int sockfd, const std::string &ip);
     RegistredUser(const RegistredUser &other);
     ~RegistredUser();
 

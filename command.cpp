@@ -23,7 +23,7 @@ void PassCommand::validate(User &user, const std::string &args)
         throw std::invalid_argument(":localhost 462 * :You are already registred and cannot handshake again\n");
     else if (args.empty())
         throw std::invalid_argument(":localhost 461 * PASS :Not enough parameters\n");
-    else if (args.compare(context->getServerpassw()) != 0)
+    else if (args.compare(Server::getPassword()) != 0)
         throw std::invalid_argument(":localhost 464 * PASS :Password incorrect\n");
 }
 
@@ -112,7 +112,6 @@ NickCommand::NickCommand(Context *context)
 
 void NickCommand::validate(User &user, const std::string &args)
 {
-    // TODO: check nickname syntax
     if (user.password.empty())
         throw std::invalid_argument(":localhost * :No password given\n");
     if (args.empty())

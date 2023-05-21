@@ -5,12 +5,14 @@
 #include <map>
 #include <vector>
 
+class Server;
 class User;
 class GuestUser;
 class RegistredUser;
 class CmdHandler;
 class Channel;
 
+#include "server.hpp"
 #include "command.hpp"
 #include "irc_user.hpp"
 #include "channel.hpp"
@@ -33,13 +35,13 @@ private:
     Context &operator=(const Context &other);
 
 public:
-    Context(const std::string passw);
+    Context();
     ~Context();
 
     void registerCommand(const std::string &name, CmdHandler *handler);
     CmdHandler *getCommand(const std::string &name);
 
-    void addNewUser(int sockfd);
+    void addNewUser(int sockfd, const std::string &ip);
     RegistredUser *findRegistredUserByNickname(const std::string &nickname);
     GuestUser *findGuestUserByNickName(const std::string &nickname);
     bool isNickNameRegistred(const std::string &nickname);
@@ -51,7 +53,6 @@ public:
     void registerUser(GuestUser &user);
 
     User *getSocketHandler(int sockfd);
-    std::string getServerpassw(void);
 
     Channel &createNewChannel(const std::string &tag);
     void deleteChannel(Channel &ch);
