@@ -46,7 +46,8 @@ int Server::get_listener_socket(const std::string &port)
     struct addrinfo *servinfo, *p;
 
     memset(&hints, 0, sizeof hints); // make sure the struct is empty
-    hints.ai_family = AF_UNSPEC;     // don't care IPv4 or IPv6
+    // hints.ai_family = AF_UNSPEC;     // don't care IPv4 or IPv6
+    hints.ai_family = AF_INET;       // handle IPV4 only
     hints.ai_socktype = SOCK_STREAM; // TCP stream sockets
     hints.ai_flags = AI_PASSIVE;     // fill in my IP for me
 
@@ -127,12 +128,10 @@ std::string Server::getPassword()
 
 void Server::onNewConnection()
 {
-    struct sockaddr_storage client_addr;
-    char clientIP[INET6_ADDRSTRLEN];
-    socklen_t addr_size;
+    struct sockaddr_in addr;
+    socklen_t addr_size = sizeof addr;
 
-    addr_size = sizeof clientIP;
-    int newClientFd = accept(listener_sock, (struct sockaddr *)&client_addr, &addr_size);
+    int newClientFd = accept(listener_sock, 0, 0);
     if (newClientFd < 0)
     {
         perror("accept");
@@ -140,13 +139,17 @@ void Server::onNewConnection()
     else
     {
         add_to_pfds(newClientFd);
-        inet_ntop(
-            client_addr.ss_family,
-            get_in_addr((struct sockaddr *)&client_addr),
-            clientIP,
-            INET6_ADDRSTRLEN);
+
+        if (getsockname(newClientFd, (struct sockaddr *)&addr, &addr_size) == -1)
+        {
+            perror("getsockname");
+            return;
+        }
+
+        char *clientIP = inet_ntoa(addr.sin_addr);
         std::cout << "new connection from " << clientIP << " on socket " << newClientFd << std::endl;
         context->addNewUser(newClientFd, clientIP);
+
         // send a welcome message to the client
         std::string welcomeMsg = "Welcome to the server!\n";
         if (send(newClientFd, welcomeMsg.c_str(), welcomeMsg.length(), 0) == -1)
