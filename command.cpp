@@ -20,11 +20,11 @@ void PassCommand::validate(User &user, const std::string &args)
     (void)user;
     std::cout << "validate PassCommand " << std::endl;
     if (user.isRegistred())
-        throw std::invalid_argument(":localhost 462 * :You are already registred and cannot handshake again\n");
+        throw std::invalid_argument(":" + Server::getHostname() + " 462 * :You are already registred and cannot handshake again\n");
     else if (args.empty())
-        throw std::invalid_argument(":localhost 461 * PASS :Not enough parameters\n");
+        throw std::invalid_argument(":" + Server::getHostname() + " 461 * PASS :Not enough parameters\n");
     else if (args.compare(Server::getPassword()) != 0)
-        throw std::invalid_argument(":localhost 464 * PASS :Password incorrect\n");
+        throw std::invalid_argument(":" + Server::getHostname() + " 464 * PASS :Password incorrect\n");
 }
 
 void PassCommand::run(User &user, const std::string &args)
@@ -77,11 +77,11 @@ int check_args(std::string args)
 void UserCommand::validate(User &user, const std::string &args)
 {
     if (user.isRegistred())
-        throw std::invalid_argument(":localhost 462 * :You are already registred and cannot handshake again\n");
+        throw std::invalid_argument(":" + Server::getHostname() + " 462 * :You are already registred and cannot handshake again\n");
     if (user.password.empty())
-        throw std::invalid_argument(":localhost * :No password given\n");
+        throw std::invalid_argument(":" + Server::getHostname() + " * :No password given\n");
     if (args.empty() || !check_args(args))
-        throw std::invalid_argument(":localhost 461 * USER :Not enough parameters\n");
+        throw std::invalid_argument(":" + Server::getHostname() + " 461 * USER :Not enough parameters\n");
 }
 
 void UserCommand::run(User &user, const std::string &args)
@@ -113,15 +113,15 @@ NickCommand::NickCommand(Context *context)
 void NickCommand::validate(User &user, const std::string &args)
 {
     if (user.password.empty())
-        throw std::invalid_argument(":localhost * :No password given\n");
+        throw std::invalid_argument(":" + Server::getHostname() + " * :No password given\n");
     if (args.empty())
-        throw std::invalid_argument(":localhost 431 * :No nickname given\n");
+        throw std::invalid_argument(":" + Server::getHostname() + " 431 * :No nickname given\n");
     if (user.nickname == args)
         throw std::invalid_argument("");
     if (context->isNickNameRegistred(args))
     {
         std::ostringstream oss;
-        oss << ":localhost 433 * " << args << " :Nickname is already in use.\n";
+        oss << ":" << Server::getHostname() << " 433 * " << args << " :Nickname is already in use.\n";
         throw std::invalid_argument(oss.str());
     }
 
@@ -132,8 +132,9 @@ void NickCommand::validate(User &user, const std::string &args)
     {
         User *oldGuest = context->findGuestUserByNickName(args);
 
-        // TODO: change 0.0.0.0 with user ip
-        oldGuest->send("ERROR :Closing Link: 0.0.0.0 (Overridden)\n");
+        std::ostringstream oss;
+        oss << "ERROR :Closing Link: " << oldGuest->ip << " (Overridden)\n";
+        oldGuest->send(oss.str());
         context->disconnectUser(args);
     }
 }
@@ -143,7 +144,7 @@ void NickCommand::run(User &user, const std::string &newNickname)
     std::cout << "run NickCommand " << std::endl;
 
     std::ostringstream oss;
-    oss << ":" << user.nickname << "!" << user.username << "@localhost NICK :" << newNickname << '\n';
+    oss << user.getMsgPrefix() << " NICK :" << newNickname << '\n';
 
     user.nickname = newNickname;
 
@@ -187,7 +188,7 @@ void JoinCommand::validate(User &user, const std::string &args)
             }
 
             if (tag == "0")
-                user.send(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, tag));
+                user.send(Error::ERR_NOSUCHCHANNEL(Server::getHostname(), user.nickname, tag));
             else
             {
                 std::string message = "JOIN " + tag + " " + key;
@@ -197,9 +198,9 @@ void JoinCommand::validate(User &user, const std::string &args)
         throw std::invalid_argument("");
     }
     else if (tag.length() == 0)
-        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
+        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS(Server::getHostname(), user.nickname, "JOIN"));
     else if (tag[0] != '#')
-        throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, tag));
+        throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL(Server::getHostname(), user.nickname, tag));
     if (user.isJoinedChannel(tag))
         throw std::invalid_argument("");
     user.canJoinChannel(user, tag, key);
@@ -237,9 +238,9 @@ void JoinCommand::run(User &user, const std::string &args)
 
         std::ostringstream oss;
         if (user.isChannelOp(ch->getTag()))
-            oss << ":localhost MODE " << ch->getTag() << " " << ch->getModes(user) << std::endl;
-        oss << ":localhost 353 " << user.nickname << " = " << tag << " :" << ch->getUsersStr() << std::endl
-            << ":localhost 366 " << user.nickname << " :End of /NAMES list." << std::endl;
+            oss << ":" << Server::getHostname() << " MODE " << ch->getTag() << " " << ch->getModes(user) << std::endl;
+        oss << ":" << Server::getHostname() << " 353 " << user.nickname << " = " << tag << " :" << ch->getUsersStr() << std::endl
+            << ":" << Server::getHostname() << " 366 " << user.nickname << " :End of /NAMES list." << std::endl;
         user.send(oss.str());
     }
 }
@@ -255,9 +256,9 @@ PartCommand::PartCommand(Context *context)
 void PartCommand::validate(User &user, const std::string &args)
 {
     if (args.empty())
-        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
+        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS(Server::getHostname(), user.nickname, "PART"));
     else if (!context->isChannelExist(args))
-        throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, args));
+        throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL(Server::getHostname(), user.nickname, args));
 }
 
 void PartCommand::run(User &user, const std::string &args)
@@ -349,7 +350,7 @@ void ModeCommand::validateModesArgs(User &user, const std::string &modes, queue_
     }
 
     if (numberOfArgsNeeded > modesArgs.size())
-        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
+        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS(Server::getHostname(), user.nickname, "MODE"));
 
     // validate nickname
     for (size_t i = 0; i < modes.length(); i++)
@@ -363,9 +364,9 @@ void ModeCommand::validateModesArgs(User &user, const std::string &modes, queue_
         User *targetUser = context->findRegistredUserByNickname(targetNickname);
 
         if (!targetUser)
-            throw std::invalid_argument(Error::ERR_NOSUCHNICK("localhost", user.nickname, targetNickname));
+            throw std::invalid_argument(Error::ERR_NOSUCHNICK(Server::getHostname(), user.nickname, targetNickname));
         if (!targetUser->isJoinedChannel(channelTag))
-            throw std::invalid_argument(Error::ERR_USERNOTINCHANNEL("localhost", user.nickname, targetUser->nickname, channelTag));
+            throw std::invalid_argument(Error::ERR_USERNOTINCHANNEL(Server::getHostname(), user.nickname, targetUser->nickname, channelTag));
     }
 }
 
@@ -381,9 +382,9 @@ void ModeCommand::validate(User &user, const std::string &args)
     queue_str modesArgs = pmodes.second;
 
     if (channelTag.empty())
-        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
+        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS(Server::getHostname(), user.nickname, "MODE"));
     if (!context->isChannelExist(channelTag))
-        throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, channelTag));
+        throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL(Server::getHostname(), user.nickname, channelTag));
     if (modes.empty())
         return;
     this->validateModesArgs(user, modesStr, modesArgs, channelTag);
@@ -405,7 +406,7 @@ void ModeCommand::run(User &user, const std::string &args)
     if (modes.empty())
     {
         std::ostringstream oss;
-        oss << ":localhost 324 " << user.nickname << " " << ch->getTag() << " " << ch->getModes(user) << std::endl;
+        oss << ":" << Server::getHostname() << " 324 " << user.nickname << " " << ch->getTag() << " " << ch->getModes(user) << std::endl;
         user.send(oss.str());
     }
 
@@ -474,13 +475,13 @@ void PrivMsgCommand::validate(User &user, const std::string &args)
 {
     std::pair<std::string, std::string> p = split(args, ' ');
     if (p.first.empty())
-        throw std::invalid_argument(Error::ERR_NORECIPIENT("localhost", user.nickname));
+        throw std::invalid_argument(Error::ERR_NORECIPIENT(Server::getHostname(), user.nickname));
     if (p.second.empty())
-        throw std::invalid_argument(Error::ERR_NOTEXTTOSEND("localhost", user.nickname));
+        throw std::invalid_argument(Error::ERR_NOTEXTTOSEND(Server::getHostname(), user.nickname));
     if (p.first[0] == '#' && !context->isChannelExist(p.first))
-        throw std::invalid_argument(Error::ERR_NOSUCHNICK("localhost", user.nickname, p.first));
+        throw std::invalid_argument(Error::ERR_NOSUCHNICK(Server::getHostname(), user.nickname, p.first));
     if (p.first[0] != '#' && !context->isNickNameRegistred(p.first))
-        throw std::invalid_argument(Error::ERR_NOSUCHNICK("localhost", user.nickname, p.first));
+        throw std::invalid_argument(Error::ERR_NOSUCHNICK(Server::getHostname(), user.nickname, p.first));
     user.canSendPrivMessage(p.first);
 }
 
@@ -540,8 +541,9 @@ void QuitCommand::run(User &user, const std::string &args)
         user.sendToUserChannels(oss.str());
     }
 
-    // TODO: change 127.0.0.1 with user ip
-    user.send("ERROR :Closing Link: 127.0.0.1 (Client Quit)\n");
+    std::ostringstream oss;
+    oss << "ERROR :Closing Link: " << user.ip << " (Client Quit)\n";
+    user.send(oss.str());
     context->disconnectUser(user.fd);
 }
 
@@ -557,16 +559,16 @@ void InviteCommand::validate(User &user, const std::string &args)
 {
     std::queue<std::string> q = splitChunks(args, ' ');
     if (q.size() < 2)
-        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
+        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS(Server::getHostname(), user.nickname, "INVITE"));
     std::string targetNickname = q.front();
     q.pop();
     std::string channelTag = q.front();
     q.pop();
 
     if (!context->isNickNameRegistred(targetNickname))
-        throw std::invalid_argument(Error::ERR_NOSUCHNICK("localhost", user.nickname, targetNickname));
+        throw std::invalid_argument(Error::ERR_NOSUCHNICK(Server::getHostname(), user.nickname, targetNickname));
     if (!context->isChannelExist(channelTag))
-        throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, channelTag));
+        throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL(Server::getHostname(), user.nickname, channelTag));
     user.canInviteUsers(channelTag);
 }
 
@@ -587,7 +589,7 @@ void InviteCommand::run(User &user, const std::string &args)
 
     {
         std::ostringstream oss;
-        oss << ":localhost " << 341 << " " << user.nickname << " " << targetNickname << " " << ch->getTag() << std::endl;
+        oss << ":" << Server::getHostname() << " " << 341 << " " << user.nickname << " " << targetNickname << " " << ch->getTag() << std::endl;
         user.send(oss.str());
     }
 
@@ -609,9 +611,9 @@ void TopicCommand::validate(User &user, const std::string &args)
     std::pair<std::string, std::string> p = split(args, ' ');
     std::string channelTag = p.first;
     if (channelTag.empty())
-        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
+        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS(Server::getHostname(), user.nickname, "TOPIC"));
     if (!context->isChannelExist(channelTag))
-        throw std::invalid_argument(Error::ERR_NOSUCHNICK("localhost", user.nickname, p.first));
+        throw std::invalid_argument(Error::ERR_NOSUCHNICK(Server::getHostname(), user.nickname, p.first));
     user.canManageChannelTopic(channelTag, !p.second.empty());
 }
 
@@ -626,9 +628,9 @@ void TopicCommand::run(User &user, const std::string &args)
     if (p.second.empty())
     {
         if (ch->hasTopic())
-            oss << ":localhost 332 " << user.nickname << " " << ch->getTag() << " :" << ch->getTopic() << std::endl;
+            oss << ":" << Server::getHostname() << " 332 " << user.nickname << " " << ch->getTag() << " :" << ch->getTopic() << std::endl;
         else
-            oss << ":localhost 331 " << user.nickname << " " << ch->getTag() << " :No topic is set." << std::endl;
+            oss << ":" << Server::getHostname() << " 331 " << user.nickname << " " << ch->getTag() << " :No topic is set." << std::endl;
         user.send(oss.str());
     }
     else if (p.second == ":")
@@ -674,7 +676,7 @@ void KickCommand::validate(User &user, const std::string &args)
     int i = 0;
     int nb_param = numberOfParam(args);
     if (nb_param < 2)
-        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS("localhost", user.nickname));
+        throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS(Server::getHostname(), user.nickname, "KICK"));
     while (std::getline(ss, token, ' '))
     {
         if (i == 0)
@@ -682,28 +684,28 @@ void KickCommand::validate(User &user, const std::string &args)
             if (token.substr(0, 1) == "#")
             {
                 if (!context->isChannelExist(token))
-                    throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, token));
+                    throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL(Server::getHostname(), user.nickname, token));
                 if (!user.isChannelOp(token)) // user.isChannelOp(ch->getTag())
                 {
                     std::cout << "debug\n";
 
-                    throw std::invalid_argument(Error::ERR_CHANOPRIVSNEEDED("localhost", user.nickname, token));
+                    throw std::invalid_argument(Error::ERR_CHANOPRIVSNEEDED(Server::getHostname(), user.nickname, token));
                 }
                 channel = token;
             }
             else
-                throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL("localhost", user.nickname, token));
+                throw std::invalid_argument(Error::ERR_NOSUCHCHANNEL(Server::getHostname(), user.nickname, token));
         }
         if (i == 1)
         {
             if (!context->isNickNameRegistred(token))
-                throw std::invalid_argument(Error::ERR_NOSUCHNICK("localhost", token, user.nickname));
+                throw std::invalid_argument(Error::ERR_NOSUCHNICK(Server::getHostname(), token, user.nickname));
             ch = context->getChannel(channel);
             us = context->findRegistredUserByNickname(token);
             if (!ch->hasUser(user))
-                throw std::invalid_argument(Error::ERR_NOTONCHANNEL("localhost", token, channel));
+                throw std::invalid_argument(Error::ERR_NOTONCHANNEL(Server::getHostname(), token, channel));
             if (!ch->hasUser(*us))
-                throw std::invalid_argument(Error::ERR_USERNOTINCHANNEL("localhost", user.nickname, token, channel));
+                throw std::invalid_argument(Error::ERR_USERNOTINCHANNEL(Server::getHostname(), user.nickname, token, channel));
         }
         i++;
     }

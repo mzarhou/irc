@@ -17,11 +17,11 @@
 
 struct Error
 {
-    static std::string ERR_NEEDMOREPARAMS(const std::string &serverHost, const std::string &nickname)
+    static std::string ERR_NEEDMOREPARAMS(const std::string &serverHost, const std::string &nickname, const std::string &commandName)
     {
         // todo optimaz for kick also
         std::ostringstream oss;
-        oss << ":" << serverHost << " 461 " << nickname << " JOIN :Not enough parameters\n";
+        oss << ":" << serverHost << " 461 " << nickname << " " << commandName << " :Not enough parameters\n";
         return oss.str();
     }
     static std::string ERR_NOSUCHCHANNEL(const std::string &serverHost, const std::string &nickname, const std::string &channel)
