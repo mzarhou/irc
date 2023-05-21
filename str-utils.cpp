@@ -62,7 +62,10 @@ std::queue<std::string> splitChunks(const std::string &str, char splitBy)
 
     while (std::getline(iss, arg, splitBy))
     {
-        q.push(arg);
+        if (splitBy == ' ')
+            arg = trim(arg);
+        if (!arg.empty())
+            q.push(arg);
     }
     return q;
 }

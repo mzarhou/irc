@@ -41,46 +41,13 @@ UserCommand::UserCommand(Context *context)
 {
 }
 
-int check_args(std::string args)
-{
-    if (args.empty())
-        return 0;
-    std::istringstream ss(args);
-    std::string token, tmp;
-    int i = 0;
-    while (std::getline(ss, token, ' '))
-    {
-        if (i == 0)
-            tmp = token;
-        if (i == 1)
-        {
-            if (token.compare("0") != 0)
-                return 0;
-        }
-        if (i == 2)
-        {
-            if (token.compare("*") != 0)
-                return 0;
-        }
-        if (i == 3)
-        {
-            if (token.compare(tmp) == 0)
-                return 0;
-        }
-        i++;
-    }
-    if (i != 4)
-        return 0;
-    return 1;
-}
-
 void UserCommand::validate(User &user, const std::string &args)
 {
     if (user.isRegistred())
         throw std::invalid_argument(":" + Server::getHostname() + " 462 * :You are already registred and cannot handshake again\n");
     if (user.password.empty())
         throw std::invalid_argument(":" + Server::getHostname() + " * :No password given\n");
-    if (args.empty() || !check_args(args))
+    if (splitChunks(args, ' ').size() < 4)
         throw std::invalid_argument(":" + Server::getHostname() + " 461 * USER :Not enough parameters\n");
 }
 
