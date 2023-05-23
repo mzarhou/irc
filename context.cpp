@@ -14,6 +14,7 @@ Context::Context()
     this->registerCommand("INVITE", new InviteCommand(this));
     this->registerCommand("TOPIC", new TopicCommand(this));
     this->registerCommand("KICK", new KickCommand(this));
+    this->registerCommand("BOT", new BotCommand(this));
 }
 
 Context::~Context()

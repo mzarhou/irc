@@ -3,6 +3,13 @@
 std::string Server::hostname = "";
 std::string Server::password = "";
 
+std::vector<pollfd> Server::pfds = std::vector<pollfd>();
+
+std::vector<pollfd> &Server::getPfds()
+{
+    return Server::pfds;
+}
+
 Server::Server(Context *context, const std::string passw, const std::string &port)
     : context(context)
 {

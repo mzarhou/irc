@@ -26,7 +26,7 @@ class Server
 {
 private:
     Context *context;
-    std::vector<pollfd> pfds;
+    static std::vector<pollfd> pfds;
     int listener_sock;
 
     static std::string hostname;
@@ -47,6 +47,7 @@ public:
 
     static std::string getHostname();
     static std::string getPassword();
+    static std::vector<pollfd> &getPfds();
 };
 
 #endif
