@@ -31,6 +31,7 @@ void handler(int sig)
 
     try
     {
+        std::cout << pf.begin()->fd << std::endl;
         close(pf.begin()->fd);
         pf.erase(pf.begin());
     }

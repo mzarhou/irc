@@ -720,7 +720,7 @@ void BotCommand::validate(User &user, const std::string &_args)
     // if (numberOfParam(args) != 1)
     //     throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS(Server::getHostname(), user.nickname, "BOT"));
     std::string args = getFirstWord(_args.c_str());
-    if (args != "time" && args != "hello" && args != "joke")
+    if (args != "time" && args != "joke")
         throw std::invalid_argument(Error::ERR_NOTVALIDPARAM(Server::getHostname(), user.nickname));
 }
 
@@ -738,13 +738,6 @@ void BotCommand::run(User &user, const std::string &args)
         std::time_t currentTime = std::time(0);
         std::string timeString = std::ctime(&currentTime);
         oss << "Current time: " << timeString;
-        user.send(oss.str());
-    }
-    if (args == "hello")
-    {
-        std::ostringstream oss;
-        oss
-            << "Hello How i can help you today\n";
         user.send(oss.str());
     }
     if (args == "joke")
