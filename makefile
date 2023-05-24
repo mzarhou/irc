@@ -22,7 +22,7 @@ ${ODIR}/%.o: %.cpp ${HEADERS}
 	${CC} -c $< -o $@ ${INC}
 
 ${NAME}: ${OBJS}
-	${CC} ${OBJS} -o ${NAME}
+	${CC} -lcurl ${OBJS} -o ${NAME}
 
 clean:
 	rm -rf ${ODIR}

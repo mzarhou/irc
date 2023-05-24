@@ -259,7 +259,10 @@ void GuestUser::onChange()
         return;
 
     std::ostringstream oss;
-    oss << ":" << Server::getHostname() << " " << nickname << " :Welcome to the 1337.server.chat Internet Relay Chat Network " << nickname << '\n';
+    oss << ":localhost 001 " << nickname << " :Welcome to the 1337.server.chat Internet Relay Chat Network " << nickname << "\n";
+    oss << ":localhost 002 " << nickname << " :Your host is ft_irc_server, running version 1.1.2\r\n";
+    oss << ":localhost 003 " << nickname << " :This server was created \n";
+    oss << ":localhost 004 " << nickname << " :localhost 1.0 - -\r\n";
     this->send(oss.str());
     context->registerUser(*this);
 }

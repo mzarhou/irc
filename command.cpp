@@ -704,3 +704,70 @@ void KickCommand::run(User &user, const std::string &args)
         i++;
     }
 }
+
+/**
+ * BOT COMMAND
+ */
+BotCommand::BotCommand(Context *context)
+    : CmdHandler(context)
+{
+}
+
+void BotCommand::validate(User &user, const std::string &_args)
+{
+    // std::istringstream ss(args);
+    // std::string token;
+    // if (numberOfParam(args) != 1)
+    //     throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS(Server::getHostname(), user.nickname, "BOT"));
+    std::string args = getFirstWord(_args.c_str());
+    if (args != "time" && args != "joke")
+        throw std::invalid_argument(Error::ERR_NOTVALIDPARAM(Server::getHostname(), user.nickname));
+}
+
+size_t WriteCallback(char* contents, size_t size, size_t nmemb, std::string* output) {
+    size_t totalSize = size * nmemb;
+    output->append(contents, totalSize);
+    return totalSize;
+}
+
+void BotCommand::run(User &user, const std::string &args)
+{
+    if (args == "time")
+    {
+        std::ostringstream oss;
+        std::time_t currentTime = std::time(0);
+        std::string timeString = std::ctime(&currentTime);
+        oss << "Current time: " << timeString;
+        user.send(oss.str());
+    }
+    if (args == "joke")
+    {
+        CURL* curl;
+        std::string data;
+        curl = curl_easy_init();
+        if (curl)
+        {
+            curl_easy_setopt(curl, CURLOPT_URL, "https://api.chucknorris.io/jokes/random");
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
+            CURLcode res = curl_easy_perform(curl);
+            if (res != CURLE_OK)
+            {
+                // Handle error
+            }
+            curl_easy_cleanup(curl);
+        }
+        data = data.erase(0,1);
+        data = data.erase(data.length() - 1, data.length());
+        std::istringstream ss(data);
+        std::string token;
+        int i = 0;
+        while (std::getline(ss, token, ':'))
+            i++;
+        token = token.erase(0,1);
+        token = token.erase(token.length() - 1, token.length());
+        token += "\n";
+        user.send(token);
+        std::cout << "SEND JOKE\n";
+    }
+}

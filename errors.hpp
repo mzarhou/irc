@@ -73,6 +73,12 @@ struct Error
         oss << ":" << serverHost << " 442 " << client << " " << channel << " :You're not on that channel\n";
         return oss.str();
     }
+    static std::string ERR_NOTVALIDPARAM(const std::string &serverHost, const std::string &client)
+    {
+        std::ostringstream oss;
+        oss << ":" << serverHost << " 1337 " << client << " " << " :Not a valid parameter\n";
+        return oss.str();
+    }
 };
 
 #endif

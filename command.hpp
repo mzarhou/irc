@@ -9,6 +9,7 @@
 #include "errors.hpp"
 #include <queue>
 #include <utility>
+#include <curl/curl.h>
 
 class Context;
 
@@ -141,6 +142,14 @@ class KickCommand : public CmdHandler
 {
 public:
     KickCommand(Context *context);
+    void validate(User &user, const std::string &args);
+    void run(User &user, const std::string &args);
+};
+
+class BotCommand : public CmdHandler
+{
+public:
+    BotCommand(Context *context);
     void validate(User &user, const std::string &args);
     void run(User &user, const std::string &args);
 };
