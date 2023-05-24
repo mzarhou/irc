@@ -16,7 +16,6 @@ void handler(int sig)
     std::string message("QUIT");
     for (; it != pf.end(); it++)
     {
-
         User *user = context.getSocketHandler(it->fd);
         if (!user)
         {
@@ -31,7 +30,6 @@ void handler(int sig)
 
     try
     {
-        std::cout << pf.begin()->fd << std::endl;
         close(pf.begin()->fd);
         pf.erase(pf.begin());
     }
