@@ -17,6 +17,12 @@ class Context;
 
 typedef std::queue<std::string> queue_str;
 
+struct botCommand {
+    std::string name;
+    std::string description;
+    std::string usage;
+};
+
 struct Command
 {
     std::string originalName;

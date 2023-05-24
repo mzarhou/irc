@@ -720,7 +720,7 @@ void BotCommand::validate(User &user, const std::string &_args)
     // if (numberOfParam(args) != 1)
     //     throw std::invalid_argument(Error::ERR_NEEDMOREPARAMS(Server::getHostname(), user.nickname, "BOT"));
     std::string args = getFirstWord(_args.c_str());
-    if (args != "time" && args != "hello" && args != "joke")
+    if (args != "time" && args != "hello" && args != "joke" && args != "help")
         throw std::invalid_argument(Error::ERR_NOTVALIDPARAM(Server::getHostname(), user.nickname));
 }
 
@@ -776,5 +776,35 @@ void BotCommand::run(User &user, const std::string &args)
         token += "\n";
         user.send(token);
         std::cout << "SEND JOKE\n";
+    }
+    if (args == "help")
+    {
+        std::cout << "Available commands:\n";
+    
+
+
+        // Create a map to store command information
+        std::map<std::string, botCommand> commandMap;
+
+        // Register commands and their details
+        commandMap["USER"] = (botCommand){"USER", "Sets the username", "USER <username>"};
+        commandMap["NICK"] = (botCommand){"NICK", "Sets the nickname", "NICK <nickname>"};
+        commandMap["PASS"] = (botCommand){"PASS", "Sets the password", "PASS <password>"};
+        commandMap["JOIN"] = (botCommand){"JOIN", "Joins a channel", "JOIN <channel>"};
+        // Add more commands and their details here...
+
+        // Iterate over the command map and print the details
+       std::map<std::string, botCommand>::const_iterator iter = commandMap.begin();
+        for (; iter != commandMap.end(); ++iter)
+        {
+            //std::cout << iter->first << " - " << iter->first << "\n";
+            //std::cout << "Usage: " << iter->second.usage << "\n\n";
+            std::ostringstream oss;
+            oss
+                << iter->first << " - " << iter->first << "\n"
+                << "Usage: " << iter->second.usage << "\n\n";
+            user.send(oss.str());
+        }
+
     }
 }
