@@ -33,7 +33,6 @@ private:
     static std::string password;
 
 private:
-    void *get_in_addr(struct sockaddr *sa);
     int get_listener_socket(const std::string &port);
     void add_to_pfds(int newFd);
     void del_from_pfds(int fdToDelete);

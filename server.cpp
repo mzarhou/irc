@@ -33,19 +33,6 @@ Server::Server(Context *context, const std::string passw, const std::string &por
     add_to_pfds(listener_sock);
 }
 
-/**
- * Get sockaddr, IPv4 or IPv6
- */
-void *Server::get_in_addr(struct sockaddr *sa)
-{
-    if (sa->sa_family == AF_INET)
-    {
-        return &(((struct sockaddr_in *)sa)->sin_addr);
-    }
-
-    return &(((struct sockaddr_in6 *)sa)->sin6_addr);
-}
-
 int Server::get_listener_socket(const std::string &port)
 {
     int status, listener_sock, yes = 1;
