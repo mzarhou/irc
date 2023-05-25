@@ -9,7 +9,6 @@ void handler(int sig)
 {
     (void)sig;
     std::vector<pollfd> &pf = Server::getPfds();
-    std::cout << "heyy: " << pf.size() << std::endl;
     std::vector<pollfd>::iterator it = pf.begin();
     it++;
 
@@ -27,17 +26,6 @@ void handler(int sig)
             user->handleSocket(Command::fromMessage(message));
         }
     }
-
-    try
-    {
-        close(pf.begin()->fd);
-        pf.erase(pf.begin());
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << e.what() << '\n';
-    }
-
     exit(0);
 }
 

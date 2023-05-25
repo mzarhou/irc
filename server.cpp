@@ -27,7 +27,7 @@ Server::Server(Context *context, const std::string passw, const std::string &por
     this->listener_sock = get_listener_socket(port);
     if (listener_sock < 0)
     {
-        std::cerr << "failed getting listener socket" << std::endl;
+        std::cerr << "failed getting listener socket, maybe port already in use." << std::endl;
         exit(1);
     }
     add_to_pfds(listener_sock);
@@ -138,7 +138,7 @@ void Server::onNewConnection()
     struct sockaddr_in addr;
     socklen_t addr_size = sizeof addr;
 
-    int newClientFd = accept(listener_sock, 0, 0);
+    int newClientFd = accept(listener_sock, (struct sockaddr *)&addr, &addr_size);
     if (newClientFd < 0)
     {
         perror("accept");
@@ -147,15 +147,15 @@ void Server::onNewConnection()
     {
         add_to_pfds(newClientFd);
 
-        if (getsockname(newClientFd, (struct sockaddr *)&addr, &addr_size) == -1)
-        {
-            perror("getsockname");
-            return;
-        }
+        unsigned char *_ip = (unsigned char *)&addr.sin_addr.s_addr;
+        std::ostringstream oss;
+        oss << (int)_ip[0] << "." << (int)_ip[1] << "." << (int)_ip[2] << "." << (int)_ip[3];
 
-        char *clientIP = inet_ntoa(addr.sin_addr);
-        std::cout << "new connection from " << clientIP << " on socket " << newClientFd << std::endl;
-        context->addNewUser(newClientFd, clientIP);
+        std::string ip(oss.str());
+        ip = (ip == "localhost" || ip == "127.0.0.1") ? Server::hostname : ip;
+
+        std::cout << "new connection from " << ip << " on socket " << newClientFd << std::endl;
+        context->addNewUser(newClientFd, ip);
 
         // send a welcome message to the client
         std::string welcomeMsg = "Welcome to the server!\n";

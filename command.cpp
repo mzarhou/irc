@@ -18,7 +18,6 @@ PassCommand::PassCommand(Context *context)
 void PassCommand::validate(User &user, const std::string &args)
 {
     (void)user;
-    std::cout << "validate PassCommand " << std::endl;
     if (user.isRegistred())
         throw std::invalid_argument(":" + Server::getHostname() + " 462 * :You are already registred and cannot handshake again\n");
     else if (args.empty())
@@ -30,7 +29,6 @@ void PassCommand::validate(User &user, const std::string &args)
 void PassCommand::run(User &user, const std::string &args)
 {
     user.password = args;
-    std::cout << "run PassCommand with passw: " << args << std::endl;
 }
 
 /**
@@ -53,7 +51,6 @@ void UserCommand::validate(User &user, const std::string &args)
 
 void UserCommand::run(User &user, const std::string &args)
 {
-    std::cout << "run UserCommand " << std::endl;
     std::istringstream ss(args);
     std::string token, tmp;
     int i = 0;
@@ -108,7 +105,6 @@ void NickCommand::validate(User &user, const std::string &args)
 
 void NickCommand::run(User &user, const std::string &newNickname)
 {
-    std::cout << "run NickCommand " << std::endl;
 
     std::ostringstream oss;
     oss << user.getMsgPrefix() << " NICK :" << newNickname << '\n';
@@ -178,8 +174,6 @@ void JoinCommand::run(User &user, const std::string &args)
 
     std::pair<std::string, std::string> p = split(args, ' ');
     std::string tag = p.first;
-
-    std::cout << "running join command -> " << tag << std::endl;
 
     if (tag == "0")
     {
@@ -426,8 +420,6 @@ void ModeCommand::run(User &user, const std::string &args)
             break;
         }
     }
-
-    std::cout << "running mode command\n";
 }
 
 /**
@@ -478,6 +470,7 @@ void PrivMsgCommand::run(User &user, const std::string &args)
     {
         // sending to a specific client
         User *targetUser = context->findRegistredUserByNickname(channelTagOrNickname);
+        std::cout << message;
         targetUser->send(message);
     }
 }
@@ -500,7 +493,6 @@ void QuitCommand::validate(User &user, const std::string &args)
 void QuitCommand::run(User &user, const std::string &args)
 {
     (void)args;
-    std::cout << "running quit" << std::endl;
     if (user.isRegistred())
     {
         std::ostringstream oss;

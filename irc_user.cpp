@@ -251,10 +251,6 @@ void GuestUser::handleSocket(const Command &cmd)
 
 void GuestUser::onChange()
 {
-    std::cout << "-> socket fd: " << fd << '\n';
-    std::cout << "-> nickname: " << nickname << '\n';
-    std::cout << "-> username: " << username << '\n';
-    std::cout << "-> password: " << password << '\n';
     if (nickname.empty() || username.empty() || password.empty())
         return;
 
