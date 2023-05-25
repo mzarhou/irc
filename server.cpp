@@ -48,7 +48,7 @@ void *Server::get_in_addr(struct sockaddr *sa)
 
 int Server::get_listener_socket(const std::string &port)
 {
-    int status, listener_sock, yes;
+    int status, listener_sock, yes = 1;
     struct addrinfo hints;
     struct addrinfo *servinfo, *p;
 
