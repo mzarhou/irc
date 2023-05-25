@@ -42,13 +42,6 @@ int main(int argc, char **argv)
 
     signal(SIGINT, handler);
 
-    try
-    {
-        Server server(&context, password, port);
-        server.run();
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << e.what() << '\n';
-    }
+    Server server(&context, password, port);
+    server.run();
 }

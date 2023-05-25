@@ -211,23 +211,30 @@ void Server::run()
 {
     for (;;)
     {
-        int p_count = poll(pfds.data(), pfds.size(), -1); // -1 timeout -> wait forever
-        if (p_count < 0)
+        try
         {
-            perror("poll");
-            exit(1);
-        }
-
-        for (size_t i = 0; i < pfds.size(); i++)
-        {
-            if (!(pfds[i].revents & POLLIN))
+            int p_count = poll(pfds.data(), pfds.size(), -1); // -1 timeout -> wait forever
+            if (p_count < 0)
             {
-                continue;
+                perror("poll");
+                exit(1);
             }
-            if (pfds[i].fd == listener_sock)
-                this->onNewConnection();
-            else
-                this->onNewMessage(pfds[i].fd);
+
+            for (size_t i = 0; i < pfds.size(); i++)
+            {
+                if (!(pfds[i].revents & POLLIN))
+                {
+                    continue;
+                }
+                if (pfds[i].fd == listener_sock)
+                    this->onNewConnection();
+                else
+                    this->onNewMessage(pfds[i].fd);
+            }
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << e.what() << '\n';
         }
     }
 }
