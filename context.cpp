@@ -9,7 +9,8 @@ Context::Context()
     this->registerCommand("JOIN", new JoinCommand(this));
     this->registerCommand("PART", new PartCommand(this));
     this->registerCommand("MODE", new ModeCommand(this));
-    this->registerCommand("PRIVMSG", new PrivMsgCommand(this));
+    this->registerCommand("PRIVMSG", new PrivMsgCommand(this, "PRIVMSG"));
+    this->registerCommand("NOTICE", new PrivMsgCommand(this, "NOTICE"));
     this->registerCommand("QUIT", new QuitCommand(this));
     this->registerCommand("INVITE", new InviteCommand(this));
     this->registerCommand("TOPIC", new TopicCommand(this));
