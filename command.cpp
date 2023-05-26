@@ -432,16 +432,26 @@ PrivMsgCommand::PrivMsgCommand(Context *context, const std::string &name)
 
 void PrivMsgCommand::validate(User &user, const std::string &args)
 {
-    std::pair<std::string, std::string> p = split(args, ' ');
-    if (p.first.empty())
-        throw std::invalid_argument(Error::ERR_NORECIPIENT(Server::getHostname(), user.nickname));
-    if (p.second.empty())
-        throw std::invalid_argument(Error::ERR_NOTEXTTOSEND(Server::getHostname(), user.nickname));
-    if (p.first[0] == '#' && !context->isChannelExist(p.first))
-        throw std::invalid_argument(Error::ERR_NOSUCHNICK(Server::getHostname(), user.nickname, p.first));
-    if (p.first[0] != '#' && !context->isNickNameRegistred(p.first))
-        throw std::invalid_argument(Error::ERR_NOSUCHNICK(Server::getHostname(), user.nickname, p.first));
-    user.canSendPrivMessage(p.first);
+    try
+    {
+        std::pair<std::string, std::string> p = split(args, ' ');
+        if (p.first.empty())
+            throw std::invalid_argument(Error::ERR_NORECIPIENT(Server::getHostname(), user.nickname));
+        if (p.second.empty())
+            throw std::invalid_argument(Error::ERR_NOTEXTTOSEND(Server::getHostname(), user.nickname));
+        if (p.first[0] == '#' && !context->isChannelExist(p.first))
+            throw std::invalid_argument(Error::ERR_NOSUCHNICK(Server::getHostname(), user.nickname, p.first));
+        if (p.first[0] != '#' && !context->isNickNameRegistred(p.first))
+            throw std::invalid_argument(Error::ERR_NOSUCHNICK(Server::getHostname(), user.nickname, p.first));
+        user.canSendPrivMessage(p.first);
+    }
+    catch (const std::exception &e)
+    {
+        if (this->name == "PRIVMSG")
+            throw std::invalid_argument(e.what());
+        else
+            throw std::invalid_argument("");
+    }
 }
 
 void PrivMsgCommand::run(User &user, const std::string &args)
