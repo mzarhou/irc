@@ -17,7 +17,8 @@ class Context;
 
 typedef std::queue<std::string> queue_str;
 
-struct botCommand {
+struct botCommand
+{
     std::string name;
     std::string description;
     std::string usage;
@@ -114,8 +115,11 @@ public:
 
 class PrivMsgCommand : public CmdHandler
 {
+private:
+    std::string name;
+
 public:
-    PrivMsgCommand(Context *context);
+    PrivMsgCommand(Context *context, const std::string &name);
     void validate(User &user, const std::string &args);
     void run(User &user, const std::string &args);
 };
